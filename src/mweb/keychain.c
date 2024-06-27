@@ -1,7 +1,7 @@
 #include "keychain.h"
 #include "hash.h"
 #include "crypto_helpers.h"
-#include "../bech32/segwit_addr.h"
+#include "../utils/segwit_addr.h"
 
 cx_err_t keychain_init(keychain_t *k, uint32_t *path, size_t path_len)
 {

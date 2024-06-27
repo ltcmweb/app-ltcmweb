@@ -21,20 +21,20 @@
 
 # Application version
 # To use Trusted Input for segwit, app version must be kept > 2.0.0
-APPVERSION_M = 2
-APPVERSION_N = 0
-APPVERSION_P = 3
+APPVERSION_M = 0
+APPVERSION_N = 2
+APPVERSION_P = 0
 
-APPDEVELOPPER="Ledger"
-APPCOPYRIGHT="(c) 2024 Ledger"
+APPDEVELOPPER="Hector Chu"
+APPCOPYRIGHT="(c) 2024 Hector Chu"
 
-APPNAME ="Bitcoin clone boilerplate"
+APPNAME ="Litecoin MWEB"
 
 VARIANT_VALUES = bitcoin_clone_boilerplate
 
 # Application source files
 # There is no additional sources for bitcoin
-#APP_SOURCE_PATH += src/
+APP_SOURCE_PATH += src/
 
 # simplify for tests
 ifndef COIN
@@ -45,24 +45,26 @@ endif
 #DEBUG = 1
 
 ifeq ($(COIN),bitcoin_clone_boilerplate)
-	
+
 # Refer to : https://github.com/dan-da/coinparams/blob/master/coinprefixes.md
-BIP44_COIN_TYPE=1
-BIP44_COIN_TYPE_2=1
-COIN_P2PKH_VERSION=111
-COIN_P2SH_VERSION=196
-COIN_NATIVE_SEGWIT_PREFIX=\"tb\" 
+BIP44_COIN_TYPE=2
+BIP44_COIN_TYPE_2=2
+COIN_P2PKH_VERSION=48
+COIN_P2SH_VERSION=50
+COIN_NATIVE_SEGWIT_PREFIX=\"ltc\"
+
+COIN_KIND=COIN_KIND_LITECOIN
 
 # Name of the coin that will be used in the app display
-COIN_COINID_NAME="Bitcoin Clone BP"
+COIN_COINID_NAME="Litecoin"
 
 # Ticker that will be used in the transaction display
-COIN_COINID_SHORT=\"BP\" 
+COIN_COINID_SHORT=\"LTC\"
 
 # Sign message magic header
-COIN_COINID=\"Bitcoin\"
+COIN_COINID=\"Litecoin\"
 
-# COIN_FAMILY can be set to FAMILY_BITCOIN, FAMILY_PEERCOIN, or FAMILY_STEALTH to handle 
+# COIN_FAMILY can be set to FAMILY_BITCOIN, FAMILY_PEERCOIN, or FAMILY_STEALTH to handle
 # parsing of the timestamp in the transaction (see lib-app-bitcoin/transaction.c)
 COIN_FAMILY=FAMILY_BITCOIN
 
@@ -78,4 +80,4 @@ else ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(error Unsupported COIN - use $(VARIANT_VALUES))
 endif
 
-include lib-app-bitcoin/Makefile
+include Makefile.lib-app-bitcoin

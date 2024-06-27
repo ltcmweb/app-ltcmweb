@@ -1,3 +1,0 @@
-[submodule "lib-app-bitcoin"]
-	path = lib-app-bitcoin
-	url = git@github.com:LedgerHQ/lib-app-bitcoin.git
