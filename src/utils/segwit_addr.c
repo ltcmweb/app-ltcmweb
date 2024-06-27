@@ -169,6 +169,10 @@ int segwit_addr_encode(char *output, const char *hrp, int witver,
   size_t datalen = 0;
   if (witver > 16)
     return 0;
+  if (witver == 0 && witprog_len != 20 && witprog_len != 32 && witprog_len != 66)
+    return 0;
+  if (witprog_len < 2 || witprog_len > 66)
+    return 0;
   data[0] = witver;
   convert_bits(data + 1, &datalen, 5, witprog, witprog_len, 8, 1);
   ++datalen;
