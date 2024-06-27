@@ -26,7 +26,7 @@ union display_variables {
     // char addressSummary[40]; // beginning of the output address ... end
     // of
 
-    char fullAddress[65]; // the address
+    char fullAddress[130]; // the address
     char fullAmount[28];  // full amount
     char feesAmount[28];  // fees
   } tmp;

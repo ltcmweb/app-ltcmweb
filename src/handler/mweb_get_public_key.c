@@ -53,7 +53,8 @@ unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
     CX_CHECK(keychain_address(&context.mwebKeychain, address_index, address));
-    return ui_display_address(address);
+    mweb_display_address(address);
+    return 0;
   }
 
   memcpy(data.scan, context.mwebKeychain.scan, sizeof(secret_key_t));

@@ -280,6 +280,11 @@ void display_public_key(uint8_t is_derivation_path_unusual) {
   }
 }
 
+void mweb_display_address(const char *address) {
+  strcpy(vars.tmp.fullAddress, address);
+  ui_display_address_flow();
+}
+
 void display_token(void) { ui_display_token_flow(); }
 
 void request_pubkey_approval(void) { ui_request_pubkey_approval_flow(); }

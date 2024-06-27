@@ -241,6 +241,11 @@ UX_STEP_NOCB(ux_display_public_flow_5_step, bnnn_paging,
                  .title = "Address",
                  .text = (char *)G_io_apdu_buffer + 200,
              });
+UX_STEP_NOCB(ux_display_address_flow_5_step, bnnn_paging,
+             {
+                 .title = "Address",
+                 .text = vars.tmp.fullAddress,
+             });
 UX_STEP_CB(ux_display_public_flow_6_step, pb,
            io_seproxyhal_touch_display_ok(NULL),
            {
@@ -261,6 +266,9 @@ UX_FLOW(ux_display_public_with_warning_flow, &ux_display_public_flow_1_step,
         &ux_display_public_flow_7_step);
 
 UX_FLOW(ux_display_public_flow, &ux_display_public_flow_5_step,
+        &ux_display_public_flow_6_step, &ux_display_public_flow_7_step);
+
+UX_FLOW(ux_display_address_flow, &ux_display_address_flow_5_step,
         &ux_display_public_flow_6_step, &ux_display_public_flow_7_step);
 
 //////////////////////////////////////////////////////////////////////
@@ -401,6 +409,10 @@ void ui_display_public_with_warning_flow(void) {
 
 void ui_display_public_flow(void) {
   ux_flow_init(0, ux_display_public_flow, NULL);
+}
+
+void ui_display_address_flow(void) {
+  ux_flow_init(0, ux_display_address_flow, NULL);
 }
 
 void ui_display_token_flow(void) {

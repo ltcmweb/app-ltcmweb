@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "../mweb/coin.h"
+
 // btchip asking the per-output UI
 unsigned int confirm_single_output(void);
 
@@ -52,3 +54,7 @@ void request_segwit_input_approval(void);
 // UI to confirm signing path
 void request_sign_path_approval(unsigned char *change_path);
 int user_action_signtx(unsigned char confirming, unsigned char direct);
+
+// MWEB
+void mweb_display_address(const char *address);
+void mweb_display_input(const coin_t *coin);
