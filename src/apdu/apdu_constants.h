@@ -21,6 +21,7 @@
 #include "os.h"
 
 #define CLA 0xE0
+#define CLA_MWEB 0xEB
 
 #define INS_GET_WALLET_PUBLIC_KEY 0x40
 #define INS_GET_TRUSTED_INPUT 0x42
@@ -32,6 +33,9 @@
 #define INS_GET_COIN_VER 0x16
 #define INS_GET_OPERATION_MODE 0x24
 #define INS_SET_OPERATION_MODE 0x26
+
+#define INS_MWEB_GET_PUBLIC_KEY 0x05
+#define INS_MWEB_SIGN_TX 0x06
 
 #define SW_INCORRECT_LENGTH 0x6700
 #define SW_SECURITY_STATUS_NOT_SATISFIED 0x6982
@@ -66,3 +70,6 @@ unsigned short handler_get_coin_version(void);
 unsigned short handler_get_operation_mode(void);
 unsigned short handler_set_operation_mode(buffer_t *buffer, uint8_t p1,
                                           uint8_t p2);
+
+unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display);
+unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more);

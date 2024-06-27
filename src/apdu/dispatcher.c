@@ -28,6 +28,10 @@
 int apdu_dispatcher(const command_t *cmd) {
   LEDGER_ASSERT(cmd != NULL, "NULL cmd");
 
+  if (cmd->cla == CLA_MWEB) {
+    goto mweb;
+  }
+
   if (cmd->cla != CLA) {
     return io_send_sw(SW_CLA_NOT_SUPPORTED);
   }
@@ -123,6 +127,35 @@ int apdu_dispatcher(const command_t *cmd) {
     buf.offset = 0;
 
     return handler_set_operation_mode(&buf, cmd->p1, cmd->p2);
+
+  default:
+    PRINTF("Instruction not supported\n");
+    return io_send_sw(SW_INS_NOT_SUPPORTED);
+  }
+
+mweb:
+  switch (cmd->ins) {
+  case INS_MWEB_GET_PUBLIC_KEY:
+    PRINTF("MWEB Get public key\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_get_public_key(&buf, (bool)cmd->p1);
+
+  case INS_MWEB_SIGN_TX:
+    PRINTF("MWEB Sign tx\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_sign_tx(&buf, cmd->p1, (bool)cmd->p2);
 
   default:
     PRINTF("Instruction not supported\n");

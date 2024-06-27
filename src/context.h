@@ -24,6 +24,9 @@
 #include "nbgl_types.h"
 #endif // HAVE_NBGL
 
+#include "mweb/input.h"
+#include "mweb/keychain.h"
+
 #define MAX_OUTPUT_TO_CHECK 100
 #define MAX_COIN_ID 13
 #define MAX_SHORT_COIN_ID 5
@@ -129,6 +132,17 @@ struct tmp_output_s {
 };
 typedef struct tmp_output_s tmp_output_t;
 
+struct mweb_transaction_context_s {
+  uint32_t n_inputs;
+  mweb_input_t input;
+  secret_key_t input_key;
+  secret_key_t output_key;
+  blinding_factor_t kernel_blind;
+  public_key_t kernel_excess_pubkey;
+  blake3_t kernel_msg_hasher;
+};
+typedef struct mweb_transaction_context_s mweb_transaction_context_t;
+
 struct context_s {
   /** Index of the output to convert into a trusted input in a transaction */
   unsigned long int trustedInputIndex;
@@ -157,6 +171,10 @@ struct context_s {
   unsigned char segwitWarningSeen;
 
   /* /Segregated Witness changes */
+
+  /* MWEB */
+  mweb_transaction_context_t mwebTxContext;
+  keychain_t mwebKeychain;
 
   /** Size currently available to the transaction parser */
   unsigned char transactionDataRemaining;
