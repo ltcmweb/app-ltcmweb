@@ -56,5 +56,6 @@ void request_sign_path_approval(unsigned char *change_path);
 int user_action_signtx(unsigned char confirming, unsigned char direct);
 
 // MWEB
-void mweb_display_address(const char *address);
-void mweb_display_input(const coin_t *coin);
+void display_mweb_address(const char *address);
+int request_mweb_input_approval(const coin_t *coin);
+int user_action_mweb_input(unsigned char confirming);

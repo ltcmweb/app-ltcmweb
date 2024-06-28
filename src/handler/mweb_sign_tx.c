@@ -92,7 +92,9 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
 
     context.mwebTxContext.n_inputs--;
 
-    ui_display_input(&coin);
+    if (!request_mweb_input_approval(&coin)) {
+      return io_send_sw(SW_TECHNICAL_PROBLEM);
+    }
 
   } else if (more) {
     CX_CHECK(blake3_update(&context.mwebTxContext.kernel_msg_hasher, buffer->ptr, buffer->size));
@@ -128,4 +130,12 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
   return 0;
 end:
   return io_send_sw(error);
+}
+
+int user_action_mweb_input(unsigned char confirming) {
+  if (confirming) {
+    return io_send_response_pointer((uint8_t*)&context.mwebTxContext.input, sizeof(mweb_input_t), SW_OK);
+  } else {
+    return io_send_sw(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
+  }
 }
