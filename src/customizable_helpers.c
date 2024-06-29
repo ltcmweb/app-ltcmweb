@@ -43,6 +43,7 @@ const unsigned char ZEN_TRANSACTION_OUTPUT_SCRIPT_P2SH_POST[] = {
 
 const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE[] = {0x16, 0x00, 0x14};
 const unsigned char TRANSACTION_OUTPUT_SCRIPT_P2WSH_PRE[] = {0x22, 0x00, 0x20};
+const unsigned char TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE[] = {0x22, 0x59, 0x20};
 
 const unsigned char ZEN_OUTPUT_SCRIPT_PRE[] = {
     0x3F, 0x76, 0xA9,
@@ -174,6 +175,26 @@ WEAK unsigned char output_script_is_op_return(unsigned char *buffer) {
   } else {
     return (buffer[1] == 0x6A);
   }
+}
+
+/*
+ * Function: output_script_is_mweb_pegin
+ * -------------------------------------
+ * Checks if the given output script is an MWEB peg-in script.
+ *
+ * Parameters:
+ *   - buffer: Pointer to the output script buffer.
+ *
+ * Returns:
+ *   - 1 if the output script is an MWEB peg-in script.
+ *   - 0 otherwise.
+ */
+WEAK unsigned char output_script_is_mweb_pegin(unsigned char *buffer) {
+  if (memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE,
+             sizeof(TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE)) == 0) {
+    return 1;
+  }
+  return 0;
 }
 
 /*

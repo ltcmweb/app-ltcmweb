@@ -72,6 +72,7 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
 
     CX_CHECK(keychain_init(&context.mwebKeychain, bip32_path, bip32_path_len));
     CX_CHECK(blake3_init(&context.mwebTxContext.kernel_msg_hasher));
+    memset(context.mwebTxContext.input_key, 0, sizeof(secret_key_t));
 
     return io_send_sw(SW_OK);
 

@@ -63,6 +63,14 @@ WEAK void get_address_from_output_script(unsigned char *script, int script_size,
     }
     return;
   }
+  if (output_script_is_mweb_pegin(script)) {
+    strncpy(out, "MWEB Peg-in: ", out_size);
+    segwit_addr_encode(
+        out + 13, (char *)PIC(COIN_NATIVE_SEGWIT_PREFIX), 9,
+        script + OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET,
+        script[OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET - 1]);
+    return;
+  }
   unsigned char versionSize;
   unsigned char address[22];
   unsigned short textSize;

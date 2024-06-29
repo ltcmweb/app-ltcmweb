@@ -49,7 +49,7 @@ void hash_input_finalize_full_reset(void) {
 
 static int check_output_displayable(bool *displayable) {
   *displayable = true;
-  unsigned char amount[8], isOpReturn, isP2sh, isNativeSegwit, j,
+  unsigned char amount[8], isOpReturn, isP2sh, isNativeSegwit, isMwebPegin, j,
       nullAmount = 1;
 
   for (j = 0; j < 8; j++) {
@@ -66,6 +66,7 @@ static int check_output_displayable(bool *displayable) {
   isOpReturn = output_script_is_op_return(context.currentOutput + 8);
   isP2sh = output_script_is_p2sh(context.currentOutput + 8);
   isNativeSegwit = output_script_is_native_witness(context.currentOutput + 8);
+  isMwebPegin = output_script_is_mweb_pegin(context.currentOutput + 8);
 #ifndef __clang_analyzer__
   unsigned char isOpCreate = output_script_is_op_create(
       context.currentOutput + 8, sizeof(context.currentOutput) - 8);
@@ -73,15 +74,15 @@ static int check_output_displayable(bool *displayable) {
       context.currentOutput + 8, sizeof(context.currentOutput) - 8);
   if (((COIN_KIND == COIN_KIND_HYDRA) &&
        !output_script_is_regular(context.currentOutput + 8) && !isP2sh &&
-       !(nullAmount && isOpReturn) && !isOpCreate && !isOpCall) ||
+       !(nullAmount && isOpReturn) && !isMwebPegin && !isOpCreate && !isOpCall) ||
       (!(COIN_KIND == COIN_KIND_HYDRA) &&
        !output_script_is_regular(context.currentOutput + 8) && !isP2sh &&
-       !(nullAmount && isOpReturn))) {
+       !(nullAmount && isOpReturn) && !isMwebPegin)) {
     PRINTF("Error : Unrecognized output script");
     return -1;
   }
 #endif
-  if (context.tmpCtx.output.changeInitialized && !isOpReturn) {
+  if (context.tmpCtx.output.changeInitialized && !isOpReturn && !isMwebPegin) {
     bool changeFound = false;
     unsigned char addressOffset =
         (isNativeSegwit ? OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET
