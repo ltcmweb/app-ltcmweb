@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+
+	<script src="secp256k1-zkp-0.0.29.js"></script>
+	<script src="apps.js"></script>
+	
+	<script>
+	
+		// Use strict
+		"use strict";
+		
+		
+		// Main function
+		window.addEventListener("DOMContentLoaded", async function() {
+		
+			// Initialize secp256k1-zkp
+			await Secp256k1Zkp.initialize();
+			
+			// Get text
+			const text = document.querySelector("p");
+			
+			// Get form
+			const form = document.querySelector("form");
+			
+			// Go through all apps
+			let firstButton = true;
+			let dividerDisplayed = false;
+			for(const [app, information] of Object.entries(APPS)) {
+			
+				// Check if first button
+				if(firstButton === true) {
+				
+					// Clear first button
+					firstButton = false;
+				}
+				
+				// Otherwise check if divider isn't displayed and at the MimbleWimble Coin-like cryptocurrencies
+				else if(dividerDisplayed === false && /^MimbleWimble Coin/u.test(app) === false) {
+				
+					// Set divider displayed
+					dividerDisplayed = true;
+					
+					// Add line breaks after the previous button
+					for(let i = 0; i < 2; ++i) {
+					
+						form.appendChild(document.createElement("br"));
+					}
+					
+					// Create divider
+					const divider = document.createElement("p");
+					
+					// Add divider to form
+					form.appendChild(divider);
+					
+					// Set divider's text
+					divider["textContent"] = "MimbleWimble Coin-like cryptocurrencies:"
+				}
+				
+				// Otherwise
+				else {
+				
+					// Add line breaks after the previous button
+					for(let i = 0; i < 2; ++i) {
+					
+						form.appendChild(document.createElement("br"));
+					}
+				}
+			
+				// Create button
+				const button = document.createElement("button");
+				
+				// Add button to form
+				form.appendChild(button);
+				
+				// Set button's text
+				button["textContent"] = "Install " + app + " app v" + information["Version"];
+				
+				// Set button's app
+				button["dataset"]["app"] = app;
+			}
+			
+			// Get buttons
+			const buttons = document.querySelectorAll("button");
+			
+			// Get alerts
+			const alerts = document.querySelector("div");
+			
+			// Form submit event
+			form.addEventListener("submit", async function(event) {
+			
+				// Get button
+				const button = document["activeElement"];
+			
+				// AES IV size
+				const AES_IV_SIZE = 16;
+				
+				// Nonce length
+				const NONCE_LENGTH = 8;
+				
+				// Batch signer serial length
+				const BATCH_SIGNER_SERIAL_LENGTH = 4;
+				
+				// Secp256k1 secret key length
+				const SECP256K1_SECRET_KEY_LENGTH = 32;
+			
+				// Prevent default
+				event.preventDefault();
+				
+				// Set app from button
+				const app = button["dataset"]["app"];
+				
+				// Set text's text
+				text["textContent"] = "Installing the " + app.replace(/^the /u, "") + " app…";
+				
+				// Go through all buttons
+				for(let i = 0; i < buttons["length"]; ++i) {
+				
+					// Disable button
+					buttons[i]["disabled"] = true;
+				}
+				
+				// Loop while alerts has an alert
+				while(alerts["firstChild"] !== null) {
+				
+					// Remove alert from alerts
+					alerts.removeChild(alerts["firstChild"]);
+				}
+				
+				// Initialize wallet name
+				let walletName;
+				
+				// Try
+				try {
+				
+					// Connect to the hardware wallet using USB
+					const hardwareWallet = await UsbTransport.request();
+					
+					// Get wallet's type
+					const walletType = hardwareWallet["device"]["productName"];
+					
+					// Get wallet's name
+					walletName = hardwareWallet["device"]["manufacturerName"] + " " + hardwareWallet["device"]["productName"];
+					
+					// Check if wallet is a Ledger Nano X
+					if(walletType === "Nano X") {
+					
+						// Throw error
+						throw "Side loading apps isn't possible on " + walletName + " hardware wallets.";
+					}
+					
+					// Verify that device has the correct target ID
+					await hardwareWallet.send(0xE0, 0x04, 0x00, 0x00, fromHexString(TARGET_IDS[walletType]));
+					
+					// Create nonce
+					const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
+					
+					// Exchange nonce's with the device
+					let response = await hardwareWallet.send(0xE0, 0x50, 0x00, 0x00, nonce);
+					
+					// Get device's nonce from the response
+					const deviceNonce = response.subarray(BATCH_SIGNER_SERIAL_LENGTH, BATCH_SIGNER_SERIAL_LENGTH + NONCE_LENGTH);
+					
+					// Create private key
+					const privateKey = crypto.getRandomValues(new Uint8Array(SECP256K1_SECRET_KEY_LENGTH));
+					
+					// Get public key from private key
+					const publicKey = Secp256k1Zkp.publicKeyFromSecretKey(privateKey);
+					
+					// Set message
+					let message = mergeArrays([
+					
+						// One
+						new Uint8Array([1]),
+						
+						// Uncompressed public key
+						Secp256k1Zkp.uncompressPublicKey(publicKey)
+					]);
+					
+					// Get message's hash
+					let messageHash = new Uint8Array(await crypto["subtle"].digest("SHA-256", message));
+					
+					// Sign message hash with the private key
+					let signature = Secp256k1Zkp.createMessageHashSignature(messageHash, privateKey);
+					
+					// Set certificate
+					let certificate = mergeArrays([
+					
+						// Uncompressed public key length
+						new Uint8Array([Secp256k1Zkp.uncompressPublicKey(publicKey)["length"]]),
+					
+						// Uncompressed public key
+						Secp256k1Zkp.uncompressPublicKey(publicKey),
+						
+						// Signature length
+						new Uint8Array([signature["length"]]),
+						
+						// Signature
+						signature
+					]);
+					
+					// Add alert
+					addAlert("Requesting authority on the " + walletName + ". Verify that the public key displayed on the hardware wallet is " + toHexString(Secp256k1Zkp.uncompressPublicKey(publicKey)).toUpperCase() + ". Do not proceed if the public key is different.");
+					
+					// Request authority to the device
+					await hardwareWallet.send(0xE0, 0x51, 0x00, 0x00, certificate);
+					
+					// Create ephemeral private key
+					const ephemeralPrivateKey = crypto.getRandomValues(new Uint8Array(SECP256K1_SECRET_KEY_LENGTH));
+					
+					// Get ephemeral public key from the ephemeral private key
+					const ephemeralPublicKey = Secp256k1Zkp.publicKeyFromSecretKey(ephemeralPrivateKey);
+					
+					// Set message
+					message = mergeArrays([
+					
+						// Seventeen
+						new Uint8Array([17]),
+						
+						// Nonce
+						nonce,
+						
+						// Device nonce
+						deviceNonce,
+						
+						// Uncompressed ephemeral public key
+						Secp256k1Zkp.uncompressPublicKey(ephemeralPublicKey)
+					]);
+					
+					// Get message's hash
+					messageHash = new Uint8Array(await crypto["subtle"].digest("SHA-256", message));
+					
+					// Sign message hash with the private key
+					signature = Secp256k1Zkp.createMessageHashSignature(messageHash, privateKey);
+					
+					// Set certificate
+					certificate = mergeArrays([
+					
+						// Uncompressed ephemeral public key length
+						new Uint8Array([Secp256k1Zkp.uncompressPublicKey(ephemeralPublicKey)["length"]]),
+					
+						// Uncompressed ephemeral public key
+						Secp256k1Zkp.uncompressPublicKey(ephemeralPublicKey),
+						
+						// Signature length
+						new Uint8Array([signature["length"]]),
+						
+						// Signature
+						signature
+					]);
+					
+					// Send ephemeral certificate to the device
+					await hardwareWallet.send(0xE0, 0x51, 0x80, 0x00, certificate);
+					
+					// Get ephemeral certificate from the device
+					await hardwareWallet.send(0xE0, 0x52, 0x00, 0x00);
+					
+					response = await hardwareWallet.send(0xE0, 0x52, 0x80, 0x00);
+					
+					// Get certificate header length from the response
+					const certificateHeaderLength = response[0];
+					
+					// Get certificate public key length from the response
+					const certificatePublicKeyLength = response[Uint8Array["BYTES_PER_ELEMENT"] + certificateHeaderLength];
+					
+					// Get device ephemeral public key from the response
+					const deviceEphemeralPublicKey = response.subarray(Uint8Array["BYTES_PER_ELEMENT"] + certificateHeaderLength + Uint8Array["BYTES_PER_ELEMENT"], Uint8Array["BYTES_PER_ELEMENT"] + certificateHeaderLength + Uint8Array["BYTES_PER_ELEMENT"] + certificatePublicKeyLength);
+					
+					// Commit to the channel
+					await hardwareWallet.send(0xE0, 0x53, 0x00, 0x00);
+					
+					// Get shared private key from the ephemeral private key and device ephemeral public key
+					const sharedPrivateKey = Secp256k1Zkp.sharedSecretKeyFromSecretKeyAndPublicKey(ephemeralPrivateKey, deviceEphemeralPublicKey);
+					
+					// Initialize encryption initialization vector
+					let encryptionInitializationVector = new Uint8Array(AES_IV_SIZE);
+					
+					// Initialize MAC initialization vector
+					let macInitializationVector = new Uint8Array(AES_IV_SIZE);
+					
+					// Add alert
+					addAlert("Installing the " + app.replace(/^the /u, "") + " app on the " + walletName + ". Verify that the identifier displayed on the hardware wallet is " + APPS[app]["Hash"][walletType].trim().toUpperCase() + ". Do not proceed if the identifier is different. This app was built for " + walletName + " hardware wallets with firmware version " + FIRMWARE_VERSIONS[walletType] + ", and it may not work and/or display a different identifier if the hardware wallet doesn't have that firmware version.");
+					
+					// Get APDU commands
+					const apduCommands = APPS[app]["APDU Commands"][walletType].split("\n");
+					
+					// Go through all APDU commands
+					for(let i = 0; i < apduCommands["length"]; ++i) {
+					
+						// Get APDU command
+						const apduCommand = fromHexString(apduCommands[i].trim());
+						
+						// Check if APDU command exists
+						if(apduCommand["length"] !== 0) {
+						
+							// Get command class
+							const commandClass = apduCommand[0];
+							
+							// Get command instruction
+							const commandInstruction = apduCommand[1];
+							
+							// Get command parameter one
+							const commandParameterOne = apduCommand[2];
+							
+							// Get command parameter two
+							const commandParameterTwo = apduCommand[3];
+							
+							// Get command data
+							const commandData = apduCommand.subarray(5);
+							
+							// Encrypt the command data
+							const encryptedData = await encrypt(sharedPrivateKey, encryptionInitializationVector, macInitializationVector, commandData);
+							
+							// Update encryption initialization vector
+							encryptionInitializationVector = encryptedData[1];
+							
+							// Update MAC initialization vector
+							macInitializationVector = encryptedData[2];
+							
+							// Send encrypted data to device
+							await hardwareWallet.send(commandClass, commandInstruction, commandParameterOne, commandParameterTwo, encryptedData[0]);
+						}
+					}
+					
+					// Add alert
+					addAlert("Done installing the app.");
+				}
+				
+				// Catch errors
+				catch(error) {
+				
+					// Add alert
+					addAlert(error);
+					
+					// Check if error is a dependency error
+					if(typeof error === "object" && error !== null && "statusCode" in error === true && (error["statusCode"] === 0x6A83 || error["statusCode"] === 0x6811)) {
+					
+						// Add alert
+						addAlert("One or more of the app's dependencies are not currently installed on the " + walletName + "." + (("Dependency" in APPS[app] === true) ? " The " + APPS[app]["Dependency"] + " app v" + APPS[app]["Version"] + " must be installed on the hardware wallet in order for this app to be installed." : ""));
+					}
+					
+					// Otherwise check if error is a storage requirement error
+					else if(typeof error === "object" && error !== null && "statusCode" in error === true && error["statusCode"] === 0x5103) {
+					
+						// Add alert
+						addAlert("There's not enough space available on the " + walletName + ". Uninstall one or more apps from the hardware wallet to install this app.");
+					}
+					
+					// Add alert
+					addAlert("Installing the app failed.");
+				}
+				
+				// Set text's text
+				text["textContent"] = "Ready.";
+				
+				// Go through all buttons
+				for(let i = 0; i < buttons["length"]; ++i) {
+				
+					// Enable button
+					buttons[i]["disabled"] = false;
+				}
+			});
+			
+			// Set text's text
+			text["textContent"] = "Ready.";
+		});
+		
+		
+		// Classes
+		
+		// USB transport class
+		class UsbTransport {
+
+			// Constructor
+			constructor(device) {
+			
+				// Set device
+				this.device = device;
+			}
+			
+			// Send
+			async send(classType, messageType, parameterOne, parameterTwo, data = new Uint8Array()) {
+			
+				// Create header
+				const header = new Uint8Array([classType, messageType, parameterOne, parameterTwo, data["length"]]);
+				
+				// Create payload
+				const payload = new Uint8Array(header["length"] + data["length"]);
+				payload.set(header);
+				payload.set(data, header["length"]);
+				
+				// Create padded payload
+				const numberOfPackets = Math.ceil((Uint16Array["BYTES_PER_ELEMENT"] + payload["length"]) / (UsbTransport.PACKET_SIZE - UsbTransport.PACKET_HEADER_SIZE));
+				const paddedPayload = new Uint8Array(numberOfPackets * (UsbTransport.PACKET_SIZE - UsbTransport.PACKET_HEADER_SIZE));
+				paddedPayload.set(new Uint8Array([payload["length"] >>> UsbTransport.BITS_IN_A_BYTE, payload["length"]]));
+				paddedPayload.set(payload, Uint16Array["BYTES_PER_ELEMENT"]);
+				
+				// Initialize packets
+				const packets = [];
+				
+				// Initialize offset
+				let offset = 0;
+				
+				// Go through all packets required to send the padded payload
+				for(let i = 0; offset !== paddedPayload["length"]; ++i) {
+				
+					// Create packet header
+					const packetHeader = new Uint8Array([0, 0, 5, i >>> UsbTransport.BITS_IN_A_BYTE, i]);
+					
+					// Get part length
+					const partLength = UsbTransport.PACKET_SIZE - packetHeader["length"];
+					
+					// Create packet
+					const packet = new Uint8Array(packetHeader["length"] + partLength);
+					packet.set(packetHeader);
+					packet.set(paddedPayload.subarray(offset, offset + partLength), packetHeader["length"]);
+					
+					// Append packet to list
+					packets.push(packet);
+					
+					// Update offset
+					offset += partLength;
+				}
+				
+				// Go through all packets
+				for(let i = 0; i < packets["length"]; ++i) {
+				
+					// Send packet
+					await this.device.transferOut(3, packets[i]);
+				}
+				
+				// Receive first response packet
+				const firstResponsePacket = new Uint8Array((await this.device.transferIn(3, UsbTransport.PACKET_SIZE))["data"]["buffer"]);
+				
+				// Get response size
+				const responseSize = (firstResponsePacket[UsbTransport.PACKET_HEADER_SIZE] << UsbTransport.BITS_IN_A_BYTE) | firstResponsePacket[UsbTransport.PACKET_HEADER_SIZE + 1];
+				
+				// Set response
+				let response = firstResponsePacket.subarray(UsbTransport.PACKET_HEADER_SIZE + Uint16Array["BYTES_PER_ELEMENT"]);
+				
+				// Go through all packets to receive
+				while(response["length"] < responseSize) {
+				
+					// Receive packet
+					const packet = new Uint8Array((await this.device.transferIn(3, UsbTransport.PACKET_SIZE))["data"]["buffer"]);
+					
+					// Append packet's response to response
+					const currentResponse = new Uint8Array(response["length"] + packet["length"] - UsbTransport.PACKET_HEADER_SIZE);
+					currentResponse.set(response);
+					currentResponse.set(packet.subarray(UsbTransport.PACKET_HEADER_SIZE), response["length"]);
+					response = currentResponse;
+				}
+				
+				// Get response status code
+				const responseStatusCode = (response[responseSize - Uint16Array["BYTES_PER_ELEMENT"]] << UsbTransport.BITS_IN_A_BYTE) | response[responseSize - Uint16Array["BYTES_PER_ELEMENT"] + 1];
+				
+				// Check if response isn't success
+				if(responseStatusCode !== UsbTransport.SUCCESS_STATUS_CODE) {
+				
+					// Throw error
+					throw new UsbTransportErrorClass(responseStatusCode);
+				}
+				
+				// Return response
+				return response.subarray(0, responseSize);
+			}
+			
+			// Request
+			static async request() {
+			
+				// Get device
+				const device = await navigator["usb"].requestDevice({
+								
+					// Filters
+					"filters": [
+						{
+					
+							// Vendor ID
+							"vendorId": UsbTransport.VENDOR_ID,
+						}
+					]
+				});
+				
+				// Open device
+				await device.open();
+				
+				// Select device's configuration
+				await device.selectConfiguration(1);
+				
+				// Try
+				try {
+				
+					// Reset device
+					await device.reset();
+				}
+				
+				// Catch errors
+				catch(error) {
+				
+				}
+				
+				// Claim interface
+				await device.claimInterface(1);
+				
+				// Return USB transport for the device
+				return new UsbTransport(device);
+			}
+			
+			// Vendor ID
+			static get VENDOR_ID() {
+			
+				// Return vendor ID
+				return 0x2C97;
+			}
+			
+			// Packet size
+			static get PACKET_SIZE() {
+			
+				// Return packet size
+				return 64;
+			}
+			
+			// Packet header size
+			static get PACKET_HEADER_SIZE() {
+			
+				// Return packet header size
+				return 5;
+			}
+			
+			// Bits in a byte
+			static get BITS_IN_A_BYTE() {
+			
+				// Return bits in a byte
+				return 8;
+			}
+			
+			// Success status code
+			static get SUCCESS_STATUS_CODE() {
+			
+				// Return success status code
+				return 0x9000;
+			}
+		}
+		
+		// Usb transport error class
+		class UsbTransportErrorClass {
+		
+			// Constructor
+			constructor(statusCode) {
+			
+				// Set status code
+				this.statusCode = statusCode;
+			}
+			
+			// To string
+			toString() {
+			
+				// Check status code
+				switch(this.statusCode) {
+				
+					// User denied status code
+					case 0x5501:
+					
+						// Return message
+						return "User denied action on hardware wallet";
+					
+					// Device locked status code
+					case 0x5515:
+					
+						// Return message
+						return "Hardware wallet is locked";
+						
+					// Default
+					default:
+					
+						// Return message
+						return "Unknown error occurred";
+				}
+			}
+		}
+		
+		
+		// Supporting function implementation
+		
+		// Derive AES key
+		async function deriveAesKey(sharedPrivateKey, keyIndex) {
+		
+			// AES key size
+			const AES_KEY_SIZE = 16;
+		
+			// Loop through retry indices
+			for(let retryIndex = 0;; ++retryIndex) {
+			
+				// Derive private key from the key index, retry index, and shared private key
+				const derivedPrivateKey = new Uint8Array(await crypto["subtle"].digest("SHA-256", mergeArrays([
+				
+					// Key index as uint32 and retry index
+					new Uint8Array([0x00, 0x00, 0x00, keyIndex, retryIndex]),
+					
+					// Shared private key
+					sharedPrivateKey
+				])));
+				
+				// Check if derived private key
+				if(Secp256k1Zkp.isValidSecretKey(derivedPrivateKey) === true) {
+				
+					// Get derived public key from derived private key
+					const derivedPublicKey = Secp256k1Zkp.publicKeyFromSecretKey(derivedPrivateKey);
+					
+					// Return hash of the derived public key
+					return (new Uint8Array(await crypto["subtle"].digest("SHA-256", Secp256k1Zkp.uncompressPublicKey(derivedPublicKey)))).subarray(0, AES_KEY_SIZE);
+				}
+			}
+		}
+		
+		// Encrypt
+		async function encrypt(sharedPrivateKey, encryptionInitializationVector, macInitializationVector, data) {
+		
+			// AES block size
+			const AES_BLOCK_SIZE = 16;
+			
+			// AES padding
+			const AES_PADDING = 0;
+			
+			// MAC length
+			const MAC_LENGTH = 14;
+			
+			// Encryption key index
+			const ENCRYPTION_KEY_INDEX = 0;
+			
+			// MAC key index
+			const MAC_KEY_INDEX = 1;
+		
+			// Append one hundered and twenty-eight to data
+			data = mergeArrays([
+			
+				// Data
+				data,
+				
+				// One hundered and twenty-eight
+				new Uint8Array([128])
+			]);
+			
+			// While data's length isn't a multiple of an AES block size
+			while(data["length"] % AES_BLOCK_SIZE !== 0) {
+			
+				// Append AES padding to data
+				data = mergeArrays([
+				
+					// Data
+					data,
+					
+					// AES padding
+					new Uint8Array([AES_PADDING])
+				]);
+			}
+			
+			// Get encryption key from shared private key
+			const encryptionKey = await deriveAesKey(sharedPrivateKey, ENCRYPTION_KEY_INDEX);
+			
+			// Create AES encryption key from encryption key
+			const aesEncryptionKey = await crypto["subtle"].importKey("raw", encryptionKey, {
+			
+				// Name
+				"name": "AES-CBC"
+				
+			}, false, [
+			
+				// Encrypt
+				"encrypt"
+			]);
+			
+			// Encrypt the data with the AES encryption key
+			const encryptedData = (new Uint8Array(await crypto["subtle"].encrypt({
+			
+				// Name
+				"name": "AES-CBC",
+				
+				// Initialization vector
+				"iv": encryptionInitializationVector
+			
+			}, aesEncryptionKey, data))).subarray(0, data["length"]);
+			
+			// Get new encryption initialization vector
+			const newEncryptionInitializationVector = encryptedData.subarray(encryptedData["length"] - AES_BLOCK_SIZE);
+			
+			// Get MAC key from shared private key
+			const macKey = await deriveAesKey(sharedPrivateKey, MAC_KEY_INDEX);
+			
+			// Create AES MAC key from MAC key
+			const aesMacKey = await crypto["subtle"].importKey("raw", macKey, {
+			
+				// Name
+				"name": "AES-CBC"
+				
+			}, false, [
+			
+				// Encrypt
+				"encrypt"
+			]);
+			
+			// Encrypt the encrypted data with the AES MAC key
+			const macData = (new Uint8Array(await crypto["subtle"].encrypt({
+			
+				// name
+				"name": "AES-CBC",
+				
+				// Initialization vector
+				"iv": macInitializationVector
+			
+			}, aesMacKey, encryptedData))).subarray(0, encryptedData["length"]);
+			
+			// Get new MAC initialization vector
+			const newMacInitializationVector = macData.subarray(macData["length"] - AES_BLOCK_SIZE);
+			
+			// Return
+			return [
+			
+				// Encrypted data and MAC data
+				mergeArrays([
+				
+					// Encrypted data
+					encryptedData,
+					
+					// MAC data
+					macData.subarray(macData["length"] - MAC_LENGTH)
+				]),
+				
+				// New encryption initialization vector
+				newEncryptionInitializationVector,
+				
+				// New MAC initialization vector
+				newMacInitializationVector
+			];
+		}
+		
+		// Add alert
+		function addAlert(text) {
+		
+			// Get alerts
+			const alerts = document.querySelector("div");
+		
+			// Create alert
+			const alert = document.createElement("p");
+			
+			// Add alert to alerts
+			alerts.appendChild(alert);
+			
+			// Set alert's text
+			alert["textContent"] = text;
+		}
+		
+		// From hex string
+		function fromHexString(hexString) {
+		
+			// Hex character to value
+			const HEX_CHARACTER_TO_VALUE = {
+				
+				// Zero
+				"0": 0x00,
+				
+				// One
+				"1": 0x01,
+				
+				// Two
+				"2": 0x02,
+				
+				// Three
+				"3": 0x03,
+				
+				// Four
+				"4": 0x04,
+				
+				// Five
+				"5": 0x05,
+				
+				// Six
+				"6": 0x06,
+				
+				// Seven
+				"7": 0x07,
+				
+				// Eight
+				"8": 0x08,
+				
+				// Nine
+				"9": 0x09,
+				
+				// Uppercase a
+				"A": 0x0A,
+				
+				// Uppercase b
+				"B": 0x0B,
+				
+				// Uppercase c
+				"C": 0x0C,
+				
+				// Uppercase d
+				"D": 0x0D,
+				
+				// Uppercase e
+				"E": 0x0E,
+				
+				// Uppercase f
+				"F": 0x0F,
+				
+				// Lowercase a
+				"a": 0x0A,
+				
+				// Lowercase b
+				"b": 0x0B,
+				
+				// Lowercase c
+				"c": 0x0C,
+				
+				// Lowercase d
+				"d": 0x0D,
+				
+				// Lowercase e
+				"e": 0x0E,
+				
+				// Lowercase f
+				"f": 0x0F
+			};
+			
+			// Hex number length
+			const HEX_NUMBER_LENGTH = "FF"["length"];
+			
+			// Bits in a byte
+			const BITS_IN_A_BYTE = 8;
+		
+			// Initialize result
+			const result = new Uint8Array(hexString["length"] / HEX_NUMBER_LENGTH);
+
+			// Go through all bytes in the result
+			for(let i = 0; i < result["length"]; ++i) {
+			
+				// Set character as a byte in the result
+				result[i] = (HEX_CHARACTER_TO_VALUE[hexString[i * HEX_NUMBER_LENGTH]] << (BITS_IN_A_BYTE / 2)) | HEX_CHARACTER_TO_VALUE[hexString[i * HEX_NUMBER_LENGTH + 1]];
+			}
+			
+			// Return result
+			return result;
+		}
+		
+		// To hex string
+		function toHexString(byteArray) {
+
+			// Value to hex character
+			const VALUE_TO_HEX_CHARACTER = [
+			
+				// Zero
+				"0",
+				
+				// One
+				"1",
+				
+				// Two
+				"2",
+				
+				// Three
+				"3",
+				
+				// Four
+				"4",
+				
+				// Five
+				"5",
+				
+				// Six
+				"6",
+				
+				// Seven
+				"7",
+				
+				// Eight
+				"8",
+				
+				// Nine
+				"9",
+				
+				// A
+				"a",
+				
+				// B
+				"b",
+				
+				// C
+				"c",
+				
+				// D
+				"d",
+				
+				// E
+				"e",
+				
+				// F
+				"f"
+			];
+			
+			// Bits in a byte
+			const BITS_IN_A_BYTE = 8;
+			
+			// Initialize result
+			let result = "";
+			
+			// Go through all bytes in the byte array
+			for(let i = 0; i < byteArray["length"]; ++i) {
+			
+				// Get byte
+				const byte = byteArray[i];
+				
+				// Append byte as characters to the result
+				result = result.concat(VALUE_TO_HEX_CHARACTER[byte >>> (BITS_IN_A_BYTE / 2)], VALUE_TO_HEX_CHARACTER[byte & 0x0F]);
+			}
+			
+			// Return result
+			return result;
+		}
+		
+		// Merge arrays
+		function mergeArrays(arrays) {
+		
+			// Initialize result
+			let result = new Uint8Array([]);
+		
+			// Go through all arrays
+			for(let i = 0; i < arrays["length"]; ++i) {
+			
+				// Get array
+				const array = arrays[i];
+				
+				// Set updated result to be the length of the current result and the array
+				const updatedResult = new Uint8Array(result["length"] + array["length"]);
+				
+				// Set arrays in the updated result
+				updatedResult.set(result);
+				updatedResult.set(array, result["length"]);
+				
+				// Set result to the updated result
+				result = updatedResult;
+			}
+		
+			// Return result
+			return result;
+		}
+	</script>
+	
+	<style>
+		* {
+			word-break: break-word;
+		}
+	</style>
+</head>
+<body>
+	<h3>Ledger App Installer</h3>
+	<p>Loading…</p>
+	<form>
+	</form>
+	<div>
+	</div>
+</body>
+</html>
