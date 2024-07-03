@@ -139,7 +139,6 @@ struct mweb_transaction_context_s {
   secret_key_t output_key;
   blinding_factor_t kernel_blind;
   public_key_t kernel_excess_pubkey;
-  blake3_t kernel_msg_hasher;
 };
 typedef struct mweb_transaction_context_s mweb_transaction_context_t;
 

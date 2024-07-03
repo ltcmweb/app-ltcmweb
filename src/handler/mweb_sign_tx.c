@@ -71,7 +71,6 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
     }
 
     CX_CHECK(keychain_init(&context.mwebKeychain, bip32_path, bip32_path_len));
-    CX_CHECK(blake3_init(&context.mwebTxContext.kernel_msg_hasher));
     memset(context.mwebTxContext.input_key, 0, sizeof(secret_key_t));
 
     return io_send_sw(SW_OK);
@@ -98,7 +97,7 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
     }
 
   } else if (more) {
-    CX_CHECK(blake3_update(&context.mwebTxContext.kernel_msg_hasher, buffer->ptr, buffer->size));
+    CX_CHECK(blake3_update(buffer->ptr, buffer->size));
 
     // more APDUs with transaction part are expected.
     // Send a SW_OK to signal that we have received the chunk
@@ -113,14 +112,14 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
     } data;
 
     // last APDU for this transaction, let's parse, display and request a sign confirmation
-    CX_CHECK(blake3_update(&context.mwebTxContext.kernel_msg_hasher, buffer->ptr, buffer->size));
+    CX_CHECK(blake3_update(buffer->ptr, buffer->size));
 
     cx_rng(stealth_blind, sizeof(stealth_blind));
 
     CX_CHECK(sk_add(data.stealth_offset, context.mwebTxContext.input_key, context.mwebTxContext.output_key));
     CX_CHECK(sk_sub(data.stealth_offset, data.stealth_offset, stealth_blind));
 
-    CX_CHECK(sign_mweb_kernel(&context.mwebTxContext.kernel_msg_hasher,
+    CX_CHECK(sign_mweb_kernel(
       context.mwebTxContext.kernel_blind, stealth_blind,
       context.mwebTxContext.kernel_excess_pubkey,
       data.stealth_excess, data.kernel_sig));

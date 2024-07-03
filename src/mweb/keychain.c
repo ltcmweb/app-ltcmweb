@@ -22,14 +22,12 @@ end:
 
 static cx_err_t mi(const keychain_t *k, uint32_t index, secret_key_t result)
 {
-    blake3_t hasher;
     cx_err_t error;
 
-    CX_CHECK(blake3_init(&hasher));
-    CX_CHECK(blake3_update(&hasher, "A", 1));
-    CX_CHECK(blake3_update(&hasher, &index, sizeof(uint32_t)));
-    CX_CHECK(blake3_update(&hasher, k->scan, sizeof(secret_key_t)));
-    CX_CHECK(blake3_final(&hasher, result));
+    CX_CHECK(blake3_update("A", 1));
+    CX_CHECK(blake3_update(&index, sizeof(uint32_t)));
+    CX_CHECK(blake3_update(k->scan, sizeof(secret_key_t)));
+    CX_CHECK(blake3_final(result));
 end:
     return error;
 }

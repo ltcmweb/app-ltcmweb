@@ -3,7 +3,6 @@
 #include "sign.h"
 
 cx_err_t sign_mweb_kernel(
-    blake3_t *kernel_msg_hasher,
     const blinding_factor_t kernel_blind,
     const blinding_factor_t stealth_blind,
     const public_key_t kernel_excess_pubkey,
