@@ -157,6 +157,17 @@ mweb:
     buf.offset = 0;
     return handler_mweb_sign_tx(&buf, cmd->p1, (bool)cmd->p2);
 
+  case INS_MWEB_TEST:
+    PRINTF("MWEB Test\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_test(&buf, cmd->p1);
+
   default:
     PRINTF("Instruction not supported\n");
     return io_send_sw(SW_INS_NOT_SUPPORTED);

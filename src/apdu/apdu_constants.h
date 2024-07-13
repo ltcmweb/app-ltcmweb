@@ -36,6 +36,7 @@
 
 #define INS_MWEB_GET_PUBLIC_KEY 0x05
 #define INS_MWEB_SIGN_TX 0x06
+#define INS_MWEB_TEST 0x99
 
 #define SW_INCORRECT_LENGTH 0x6700
 #define SW_SECURITY_STATUS_NOT_SATISFIED 0x6982
@@ -71,5 +72,7 @@ unsigned short handler_get_operation_mode(void);
 unsigned short handler_set_operation_mode(buffer_t *buffer, uint8_t p1,
                                           uint8_t p2);
 
+bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len);
 unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display);
 unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more);
+unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op);

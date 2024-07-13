@@ -34,7 +34,7 @@
 #include "../mweb/kernel.h"
 #include "../mweb/keychain.h"
 
-static bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len)
+bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len)
 {
   if (buffer->size - buffer->offset < out_len) {
     return false;
