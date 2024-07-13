@@ -13,3 +13,7 @@ def test_mweb_calculate_output_key(backend, firmware):
 def test_mweb_input_create(backend, firmware):
     for _ in range(100):
         run_test(backend, 2, randbytes(96))
+
+def test_mweb_sign(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 3, randbytes(64))

@@ -38,5 +38,12 @@ func main() {
 		binary.Write(&buf, binary.LittleEndian, input.OutputPubKey)
 		binary.Write(&buf, binary.LittleEndian, input.Signature)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
+	case 3:
+		key := &mw.SecretKey{}
+		msg := &chainhash.Hash{}
+		binary.Read(r, binary.LittleEndian, key)
+		binary.Read(r, binary.LittleEndian, msg)
+		sig := mw.Sign(key, msg[:])
+		fmt.Println(hex.EncodeToString(sig[:]))
 	}
 }

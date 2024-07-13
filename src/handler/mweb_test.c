@@ -57,6 +57,21 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
     CX_CHECK(mweb_input_create(&input, &coin, input_key));
     return io_send_response_pointer((uint8_t*)&input, sizeof(input), SW_OK);
   }
+
+  case 3: {
+    signature_t sig;
+    secret_key_t key;
+    hash_t msg;
+
+    if (!buffer_read(buffer, key, sizeof(key))) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+    if (!buffer_read(buffer, msg, sizeof(msg))) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+    CX_CHECK(mweb_sign(sig, key, msg));
+    return io_send_response_pointer((uint8_t*)sig, sizeof(sig), SW_OK);
+  }
   }
 end:
   return io_send_sw(error);
