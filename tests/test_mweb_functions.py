@@ -29,3 +29,10 @@ def test_mweb_keychain_spend_key(backend, firmware):
 def test_mweb_keychain_address(backend, firmware):
     for _ in range(100):
         run_test(backend, 6, randbytes(68))
+
+def test_mweb_sign_kernel(backend, firmware):
+    for _ in range(100):
+        data = randbytes(64)
+        data2 = data[:32] + bytes(8)
+        commit = subprocess.run(["./tests/test_mweb", "8", data2.hex()], capture_output=True)
+        run_test(backend, 7, data + commit.stdout)

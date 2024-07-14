@@ -67,5 +67,18 @@ func main() {
 		binary.Read(r, binary.LittleEndian, &index)
 		addr := ltcutil.NewAddressMweb(keychain.Address(index), &chaincfg.MainNetParams)
 		fmt.Println(hex.EncodeToString([]byte(addr.String())))
+	case 7:
+		kernelBlind := &mw.BlindingFactor{}
+		stealthBlind := &mw.BlindingFactor{}
+		binary.Read(r, binary.LittleEndian, kernelBlind)
+		binary.Read(r, binary.LittleEndian, stealthBlind)
+		kernel := mweb.CreateKernel(kernelBlind, stealthBlind, nil, nil, nil, nil)
+		fmt.Println(hex.EncodeToString(kernel.Signature[:]))
+	case 8:
+		blind := &mw.BlindingFactor{}
+		var value uint64
+		binary.Read(r, binary.LittleEndian, blind)
+		binary.Read(r, binary.LittleEndian, &value)
+		fmt.Println(hex.EncodeToString(mw.NewCommitment(blind, value)[:]))
 	}
 }

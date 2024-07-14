@@ -13,6 +13,8 @@
 #include "context.h"
 #include "extensions.h"
 
+#include "../mweb/kernel.h"
+
 unsigned short test_set_keychain(buffer_t *buffer) {
   if (!buffer_read(buffer, context.mwebKeychain.scan, sizeof(secret_key_t))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
@@ -133,6 +135,29 @@ end:
   return io_send_sw(error);
 }
 
+unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
+  blinding_factor_t kernel_blind, stealth_blind;
+  public_key_t kernel_excess, stealth_excess;
+  signature_t sig;
+  cx_err_t error;
+
+  if (!buffer_read(buffer, kernel_blind, sizeof(kernel_blind))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, stealth_blind, sizeof(stealth_blind))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, kernel_excess, sizeof(kernel_excess))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  CX_CHECK(blake3_update("\x10", 1));
+  CX_CHECK(blake3_update(kernel_excess, sizeof(kernel_excess)));
+  CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind, kernel_excess, stealth_excess, sig));
+  return io_send_response_pointer(sig, sizeof(sig), SW_OK);
+end:
+  return io_send_sw(error);
+}
+
 unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   switch (op) {
   case 0: return test_set_keychain(buffer);
@@ -142,6 +167,7 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   case 4: return test_sk_pub(buffer);
   case 5: return test_keychain_spend_key(buffer);
   case 6: return test_keychain_address(buffer);
+  case 7: return test_sign_mweb_kernel(buffer);
   }
   return io_send_sw(SW_INCORRECT_P1_P2);
 }
