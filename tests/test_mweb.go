@@ -8,7 +8,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ltcmweb/ltcd/chaincfg"
 	"github.com/ltcmweb/ltcd/chaincfg/chainhash"
+	"github.com/ltcmweb/ltcd/ltcutil"
 	"github.com/ltcmweb/ltcd/ltcutil/mweb"
 	"github.com/ltcmweb/ltcd/ltcutil/mweb/mw"
 )
@@ -45,5 +47,25 @@ func main() {
 		binary.Read(r, binary.LittleEndian, msg)
 		sig := mw.Sign(key, msg[:])
 		fmt.Println(hex.EncodeToString(sig[:]))
+	case 4:
+		key := &mw.SecretKey{}
+		binary.Read(r, binary.LittleEndian, key)
+		pub := key.PubKey()
+		fmt.Println(hex.EncodeToString(pub[:]))
+	case 5:
+		keychain := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
+		var index uint32
+		binary.Read(r, binary.LittleEndian, keychain.Scan)
+		binary.Read(r, binary.LittleEndian, keychain.Spend)
+		binary.Read(r, binary.LittleEndian, &index)
+		fmt.Println(hex.EncodeToString(keychain.SpendKey(index)[:]))
+	case 6:
+		keychain := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
+		var index uint32
+		binary.Read(r, binary.LittleEndian, keychain.Scan)
+		binary.Read(r, binary.LittleEndian, keychain.Spend)
+		binary.Read(r, binary.LittleEndian, &index)
+		addr := ltcutil.NewAddressMweb(keychain.Address(index), &chaincfg.MainNetParams)
+		fmt.Println(hex.EncodeToString([]byte(addr.String())))
 	}
 }

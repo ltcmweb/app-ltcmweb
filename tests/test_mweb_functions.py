@@ -17,3 +17,15 @@ def test_mweb_input_create(backend, firmware):
 def test_mweb_sign(backend, firmware):
     for _ in range(100):
         run_test(backend, 3, randbytes(64))
+
+def test_mweb_sk_pub(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 4, randbytes(32))
+
+def test_mweb_keychain_spend_key(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 5, randbytes(68))
+
+def test_mweb_keychain_address(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 6, randbytes(68))
