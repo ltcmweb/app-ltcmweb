@@ -36,11 +36,7 @@ def test_mweb_keychain_address(backend, firmware):
 
 def test_mweb_sign_kernel(backend, firmware):
     for _ in range(100):
-        blinds = randbytes(64)
-        kernel_excess_args = blinds[:32] + bytes(8)
-        kernel_excess = run_go(8, kernel_excess_args)
-        kernel_excess_pubkey = run_go(9, kernel_excess)
-        run_test(backend, 7, blinds + kernel_excess + kernel_excess_pubkey)
+        run_test(backend, 7, randbytes(64))
 
 def test_mweb_new_commit(backend, firmware):
     for _ in range(100):

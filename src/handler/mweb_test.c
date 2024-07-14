@@ -138,7 +138,8 @@ end:
 
 unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   blinding_factor_t kernel_blind, stealth_blind;
-  public_key_t kernel_excess, kernel_excess_pubkey, stealth_excess;
+  commitment_t kernel_excess;
+  public_key_t kernel_excess_pubkey, stealth_excess;
   signature_t sig;
   cx_err_t error;
 
@@ -148,12 +149,7 @@ unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   if (!buffer_read(buffer, stealth_blind, sizeof(stealth_blind))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  if (!buffer_read(buffer, kernel_excess, sizeof(kernel_excess))) {
-    return io_send_sw(SW_INCORRECT_LENGTH);
-  }
-  if (!buffer_read(buffer, kernel_excess_pubkey, sizeof(kernel_excess_pubkey))) {
-    return io_send_sw(SW_INCORRECT_LENGTH);
-  }
+  CX_CHECK(new_commit(kernel_excess, kernel_excess_pubkey, kernel_blind, 0));
   CX_CHECK(blake3_update("\x10", 1));
   CX_CHECK(blake3_update(kernel_excess, sizeof(kernel_excess)));
   CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind, kernel_excess_pubkey, stealth_excess, sig));
@@ -163,9 +159,12 @@ end:
 }
 
 unsigned short test_new_commit(buffer_t *buffer) {
-  commitment_t commit;
   blinding_factor_t blind;
   uint64_t value;
+  struct {
+    commitment_t commit;
+    public_key_t commit_pub;
+  } data;
   cx_err_t error;
 
   if (!buffer_read(buffer, blind, sizeof(blind))) {
@@ -174,8 +173,8 @@ unsigned short test_new_commit(buffer_t *buffer) {
   if (!buffer_read_u64(buffer, &value, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(new_commit(commit, blind, value));
-  return io_send_response_pointer(commit, sizeof(commit), SW_OK);
+  CX_CHECK(new_commit(data.commit, data.commit_pub, blind, value));
+  return io_send_response_pointer((uint8_t*)&data, sizeof(data), SW_OK);
 end:
   return io_send_sw(error);
 }
