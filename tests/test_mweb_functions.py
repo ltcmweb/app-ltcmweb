@@ -1,10 +1,14 @@
 from random import randbytes
 import subprocess
 
+def run_go(op, data):
+    args = ["./tests/test_mweb", str(op), data.hex()]
+    return subprocess.run(args, capture_output=True).stdout
+
 def run_test(backend, op, data):
     rapdu = backend.exchange(0xeb, 0x99, op, 0x00, data)
-    result = subprocess.run(["./tests/test_mweb", str(op), data.hex()], capture_output=True)
-    assert bytes.fromhex(result.stdout.decode()) == rapdu.data
+    result = run_go(op, data)
+    assert bytes.fromhex(result.decode()) == rapdu.data
 
 def test_mweb_calculate_output_key(backend, firmware):
     for _ in range(100):
@@ -32,7 +36,8 @@ def test_mweb_keychain_address(backend, firmware):
 
 def test_mweb_sign_kernel(backend, firmware):
     for _ in range(100):
-        data = randbytes(64)
-        data2 = data[:32] + bytes(8)
-        commit = subprocess.run(["./tests/test_mweb", "8", data2.hex()], capture_output=True)
-        run_test(backend, 7, data + commit.stdout)
+        blinds = randbytes(64)
+        kernel_excess_args = blinds[:32] + bytes(8)
+        kernel_excess = run_go(8, kernel_excess_args)
+        kernel_excess_pubkey = run_go(9, kernel_excess)
+        run_test(backend, 7, blinds + kernel_excess + kernel_excess_pubkey)

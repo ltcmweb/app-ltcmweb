@@ -80,5 +80,9 @@ func main() {
 		binary.Read(r, binary.LittleEndian, blind)
 		binary.Read(r, binary.LittleEndian, &value)
 		fmt.Println(hex.EncodeToString(mw.NewCommitment(blind, value)[:]))
+	case 9:
+		commit := &mw.Commitment{}
+		binary.Read(r, binary.LittleEndian, commit)
+		fmt.Println(hex.EncodeToString(commit.PubKey()[:]))
 	}
 }
