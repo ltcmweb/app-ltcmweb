@@ -3,12 +3,12 @@ import subprocess
 
 def run_go(op, data):
     args = ["./tests/test_mweb", str(op), data.hex()]
-    return subprocess.run(args, capture_output=True).stdout
+    result = subprocess.run(args, capture_output=True)
+    return bytes.fromhex(result.stdout.decode())
 
 def run_test(backend, op, data):
     rapdu = backend.exchange(0xeb, 0x99, op, 0x00, data)
-    result = run_go(op, data)
-    assert bytes.fromhex(result.decode()) == rapdu.data
+    assert run_go(op, data) == rapdu.data
 
 def test_mweb_calculate_output_key(backend, firmware):
     for _ in range(100):
