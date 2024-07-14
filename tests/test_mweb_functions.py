@@ -41,3 +41,7 @@ def test_mweb_sign_kernel(backend, firmware):
         kernel_excess = run_go(8, kernel_excess_args)
         kernel_excess_pubkey = run_go(9, kernel_excess)
         run_test(backend, 7, blinds + kernel_excess + kernel_excess_pubkey)
+
+def test_mweb_new_commit(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 8, randbytes(40))

@@ -13,6 +13,7 @@
 #include "context.h"
 #include "extensions.h"
 
+#include "../mweb/commit.h"
 #include "../mweb/kernel.h"
 
 unsigned short test_set_keychain(buffer_t *buffer) {
@@ -161,6 +162,24 @@ end:
   return io_send_sw(error);
 }
 
+unsigned short test_new_commit(buffer_t *buffer) {
+  commitment_t commit;
+  blinding_factor_t blind;
+  uint64_t value;
+  cx_err_t error;
+
+  if (!buffer_read(buffer, blind, sizeof(blind))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read_u64(buffer, &value, LE)) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  CX_CHECK(new_commit(commit, blind, value));
+  return io_send_response_pointer(commit, sizeof(commit), SW_OK);
+end:
+  return io_send_sw(error);
+}
+
 unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   switch (op) {
   case 0: return test_set_keychain(buffer);
@@ -171,6 +190,7 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   case 5: return test_keychain_spend_key(buffer);
   case 6: return test_keychain_address(buffer);
   case 7: return test_sign_mweb_kernel(buffer);
+  case 8: return test_new_commit(buffer);
   }
   return io_send_sw(SW_INCORRECT_P1_P2);
 }

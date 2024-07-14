@@ -1,12 +1,29 @@
 #include "sign.h"
 #include "const.h"
 
+cx_err_t has_square_root(const uint8_t *point, bool *result)
+{
+    uint8_t e[32], one[32] = { 0 };
+    cx_err_t error;
+
+    memcpy(e, SECP256K1_CURVE_PRIME, 32);
+    for (int i = 31; i >= 0; i--) {
+        e[i] = e[i] >> 1 | (i ? e[i-1] << 7 : 0);
+    }
+
+    CX_CHECK(cx_math_powm_no_throw(e, point, e, 32, SECP256K1_CURVE_PRIME, 32));
+    one[31] = 1;
+    *result = !memcmp(e, one, 32);
+end:
+    return error;
+}
+
 cx_err_t mweb_sign(signature_t sig, const secret_key_t key, const hash_t msg)
 {
     cx_sha256_t hasher;
     secret_key_t k, e;
     uint8_t point[65];
-    uint8_t one[32] = { 0 };
+    bool has_sqrt;
     public_key_t pubkey;
     cx_err_t error;
 
@@ -18,14 +35,8 @@ cx_err_t mweb_sign(signature_t sig, const secret_key_t key, const hash_t msg)
     CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_SECP256K1, point, k, 32));
     memcpy(sig, point + 1, 32);
 
-    memcpy(e, SECP256K1_CURVE_PRIME, 32);
-    for (int i = 31; i >= 0; i--) {
-        e[i] = e[i] >> 1 | (i ? e[i-1] << 7 : 0);
-    }
-
-    CX_CHECK(cx_math_powm_no_throw(e, point + 33, e, 32, SECP256K1_CURVE_PRIME, 32));
-    one[31] = 1;
-    if (memcmp(e, one, 32)) {
+    CX_CHECK(has_square_root(point + 33, &has_sqrt));
+    if (!has_sqrt) {
         CX_CHECK(sk_sub(k, SECP256K1_CURVE_ORDER, k));
     }
 

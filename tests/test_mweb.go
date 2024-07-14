@@ -50,8 +50,7 @@ func main() {
 	case 4:
 		key := &mw.SecretKey{}
 		binary.Read(r, binary.LittleEndian, key)
-		pub := key.PubKey()
-		fmt.Println(hex.EncodeToString(pub[:]))
+		fmt.Println(hex.EncodeToString(key.PubKey()[:]))
 	case 5:
 		keychain := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
 		var index uint32
