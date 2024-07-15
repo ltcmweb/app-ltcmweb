@@ -1,4 +1,5 @@
 #include "output.h"
+#include "hash.h"
 
 #define MWEB_OUTPUT_MESSAGE_STANDARD_FIELDS_FEATURE_BIT 1
 

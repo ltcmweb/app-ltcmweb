@@ -1,7 +1,6 @@
 #pragma once
 
 #include "commit.h"
-#include "sign.h"
 
 typedef struct {
     uint8_t features;
@@ -16,7 +15,6 @@ typedef struct {
     public_key_t sender_pubkey;
     public_key_t receiver_pubkey;
     mweb_output_message_t message;
-    signature_t sig;
 } mweb_output_t;
 
 cx_err_t mweb_output_create(mweb_output_t *output,
