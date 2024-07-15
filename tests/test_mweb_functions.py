@@ -57,6 +57,5 @@ def test_mweb_output_create(backend, firmware):
         range_proof_hash = resp_go[-96:-64]
         resp = backend.exchange(0xeb, 0x99, 10, 0x00, data).data
         resp += range_proof_hash
-        data = range_proof_hash + sender_key
-        resp += backend.exchange(0xeb, 0x99, 11, 0x00, data).data
+        resp += backend.exchange(0xeb, 0x99, 11, 0x00, range_proof_hash).data
         assert resp_go == resp

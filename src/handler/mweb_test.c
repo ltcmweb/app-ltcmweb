@@ -196,12 +196,10 @@ end:
 }
 
 unsigned short test_mweb_output_create(buffer_t *buffer) {
-  uint64_t value;
   uint8_t pA[65], pB[65];
-  secret_key_t sender_key;
   cx_err_t error;
 
-  if (!buffer_read_u64(buffer, &value, LE)) {
+  if (!buffer_read_u64(buffer, &context.mweb.output.value, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
   if (!buffer_read(buffer, pA, sizeof(pA))) {
@@ -210,29 +208,30 @@ unsigned short test_mweb_output_create(buffer_t *buffer) {
   if (!buffer_read(buffer, pB, sizeof(pB))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  if (!buffer_read(buffer, sender_key, sizeof(sender_key))) {
+  if (!buffer_read(buffer, context.mweb.output.senderKey, sizeof(secret_key_t))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(mweb_output_create(&context.mweb.output.output, context.mweb.output.blind,
-                              context.mweb.output.shared, value, pA, pB, sender_key));
-  return io_send_response_pointer((uint8_t*)&context.mweb.output, sizeof(context.mweb.output), SW_OK);
+  CX_CHECK(mweb_output_create(&context.mweb.output.result.output,
+                              context.mweb.output.result.blind,
+                              context.mweb.output.result.shared,
+                              context.mweb.output.value, pA, pB,
+                              context.mweb.output.senderKey));
+  return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
+                                  sizeof(context.mweb.output.result), SW_OK);
 end:
   return io_send_sw(error);
 }
 
 unsigned short test_mweb_output_sign(buffer_t *buffer) {
   hash_t range_proof_hash;
-  secret_key_t sender_key;
   signature_t sig;
   cx_err_t error;
 
   if (!buffer_read(buffer, range_proof_hash, sizeof(range_proof_hash))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  if (!buffer_read(buffer, sender_key, sizeof(sender_key))) {
-    return io_send_sw(SW_INCORRECT_LENGTH);
-  }
-  CX_CHECK(mweb_output_sign(sig, &context.mweb.output.output, range_proof_hash, sender_key));
+  CX_CHECK(mweb_output_sign(sig, &context.mweb.output.result.output,
+                            range_proof_hash, context.mweb.output.senderKey));
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:
   return io_send_sw(error);

@@ -4,6 +4,8 @@
 #include "secret_key.h"
 
 typedef struct {
+    blinding_factor_t blind;
+    uint64_t value;
     hash_t output_id;
     uint32_t address_index;
     secret_key_t shared_secret;

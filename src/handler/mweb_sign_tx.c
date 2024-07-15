@@ -1,20 +1,3 @@
-/*****************************************************************************
- *   Ledger App Boilerplate.
- *   (c) 2020 Ledger SAS.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *****************************************************************************/
-
 #include <stdint.h>   // uint*_t
 #include <stdbool.h>  // bool
 #include <stddef.h>   // size_t
@@ -54,35 +37,11 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
-    if (!buffer_read_u32(buffer, &context.mweb.input.count, LE)) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
     CX_CHECK(keychain_init(&context.mwebKeychain, bip32_path, bip32_path_len));
+    memset(context.mwebBlindSum, 0, sizeof(blinding_factor_t));
     memset(context.mwebStealthOffset, 0, sizeof(blinding_factor_t));
 
     return io_send_sw(SW_OK);
-
-  } else if (context.mweb.input.count) {  // parse inputs
-    coin_t coin;
-    secret_key_t key;
-
-    if (!buffer_read(buffer, (uint8_t*)&coin, sizeof(coin))) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
-    CX_CHECK(keychain_spend_key(&context.mwebKeychain, coin.address_index, key));
-    CX_CHECK(calculate_output_key(&coin, key));
-    cx_rng(key, sizeof(key));
-    CX_CHECK(mweb_input_create(&context.mweb.input.input, &coin, key));
-    CX_CHECK(sk_add(context.mwebStealthOffset, key, context.mwebStealthOffset));
-    CX_CHECK(sk_sub(context.mwebStealthOffset, context.mwebStealthOffset, coin.spend_key));
-
-    context.mweb.input.count--;
-
-    if (!request_mweb_input_approval(&coin)) {
-      return io_send_sw(SW_TECHNICAL_PROBLEM);
-    }
 
   } else if (more) {
     CX_CHECK(blake3_update(buffer->ptr, buffer->size));

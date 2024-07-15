@@ -157,6 +157,39 @@ mweb:
     buf.offset = 0;
     return handler_mweb_sign_tx(&buf, cmd->p1, (bool)cmd->p2);
 
+  case INS_MWEB_ADD_INPUT:
+    PRINTF("MWEB Add input\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_add_input(&buf);
+
+  case INS_MWEB_ADD_OUTPUT:
+    PRINTF("MWEB Add output\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_add_output(&buf);
+
+  case INS_MWEB_SIGN_OUTPUT:
+    PRINTF("MWEB Sign output\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_sign_output(&buf);
+
   case INS_MWEB_TEST:
     PRINTF("MWEB Test\n");
     if (!cmd->data) {

@@ -134,22 +134,23 @@ struct tmp_output_s {
 typedef struct tmp_output_s tmp_output_t;
 
 struct mweb_input_context_s {
-  uint32_t count;
+  coin_t coin;
   mweb_input_t input;
 };
-typedef struct mweb_input_context_s mweb_input_context_t;
 
 struct mweb_output_context_s {
-  mweb_output_t output;
-  blinding_factor_t blind;
-  secret_key_t shared;
+  uint64_t value;
+  secret_key_t senderKey;
+  struct {
+    mweb_output_t output;
+    blinding_factor_t blind;
+    secret_key_t shared;
+  } result;
 };
-typedef struct mweb_output_context_s mweb_output_context_t;
 
 struct mweb_kernel_context_s {
   blinding_factor_t blind;
 };
-typedef struct mweb_kernel_context_s mweb_kernel_context_t;
 
 struct context_s {
   /** Index of the output to convert into a trusted input in a transaction */
@@ -186,6 +187,7 @@ struct context_s {
     struct mweb_output_context_s output;
     struct mweb_kernel_context_s kernel;
   } mweb;
+  blinding_factor_t mwebBlindSum;
   blinding_factor_t mwebStealthOffset;
   keychain_t mwebKeychain;
 
