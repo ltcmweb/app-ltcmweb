@@ -180,7 +180,7 @@ end:
 }
 
 unsigned short test_switch_commit(buffer_t *buffer) {
-  blinding_factor_t blind;
+  blinding_factor_t blind, blind_switch;
   uint64_t value;
   cx_err_t error;
 
@@ -190,8 +190,8 @@ unsigned short test_switch_commit(buffer_t *buffer) {
   if (!buffer_read_u64(buffer, &value, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(switch_commit(blind, blind, value));
-  return io_send_response_pointer(blind, sizeof(blind), SW_OK);
+  CX_CHECK(switch_commit(blind_switch, blind, value));
+  return io_send_response_pointer(blind_switch, sizeof(blind_switch), SW_OK);
 end:
   return io_send_sw(error);
 }
