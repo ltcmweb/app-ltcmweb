@@ -62,7 +62,9 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     CX_CHECK(blake3_update("Y", 1));
     CX_CHECK(blake3_update(t, sizeof(t)));
     CX_CHECK(blake3_final(h));
-    output->message.masked_value = v ^ *(uint64_t*)h;
+    for (int i = 0; i < 8; i++) {
+        output->message.masked_value[i] = (v >> i*8 & 0xFF) ^ h[i];
+    }
 
     CX_CHECK(blake3_update("X", 1));
     CX_CHECK(blake3_update(t, sizeof(t)));

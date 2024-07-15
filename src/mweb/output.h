@@ -7,7 +7,7 @@ typedef struct {
     uint8_t features;
     public_key_t key_exchange_pubkey;
     uint8_t view_tag;
-    uint64_t masked_value;
+    uint8_t masked_value[8];
     uint8_t masked_nonce[16];
 } mweb_output_message_t;
 
