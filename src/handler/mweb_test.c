@@ -220,6 +220,24 @@ end:
   return io_send_sw(error);
 }
 
+unsigned short test_mweb_output_sign(buffer_t *buffer) {
+  hash_t range_proof_hash;
+  secret_key_t sender_key;
+  signature_t sig;
+  cx_err_t error;
+
+  if (!buffer_read(buffer, range_proof_hash, sizeof(range_proof_hash))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, sender_key, sizeof(sender_key))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  CX_CHECK(mweb_output_sign(sig, &context.mweb.output.output, range_proof_hash, sender_key));
+  return io_send_response_pointer(sig, sizeof(sig), SW_OK);
+end:
+  return io_send_sw(error);
+}
+
 unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   switch (op) {
   case 0: return test_set_keychain(buffer);
@@ -233,6 +251,7 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   case 8: return test_new_commit(buffer);
   case 9: return test_new_blind_switch(buffer);
   case 10: return test_mweb_output_create(buffer);
+  case 11: return test_mweb_output_sign(buffer);
   }
   return io_send_sw(SW_INCORRECT_P1_P2);
 }

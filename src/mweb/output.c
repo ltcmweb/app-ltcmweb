@@ -1,5 +1,4 @@
 #include "output.h"
-#include "hash.h"
 
 #define MWEB_OUTPUT_MESSAGE_STANDARD_FIELDS_FEATURE_BIT 1
 
@@ -86,6 +85,26 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     CX_CHECK(blake3_update(sA, sizeof(sA)));
     CX_CHECK(blake3_final(h));
     output->message.view_tag = h[0];
+end:
+    return error;
+}
+
+cx_err_t mweb_output_sign(signature_t sig, const mweb_output_t *output,
+    const hash_t range_proof_hash, const secret_key_t sender_key)
+{
+    hash_t hash;
+    cx_err_t error;
+
+    CX_CHECK(blake3_update(&output->message, sizeof(mweb_output_message_t)));
+    CX_CHECK(blake3_final(hash));
+
+    CX_CHECK(blake3_update(output->commit, sizeof(commitment_t)));
+    CX_CHECK(blake3_update(output->sender_pubkey, sizeof(public_key_t)));
+    CX_CHECK(blake3_update(output->receiver_pubkey, sizeof(public_key_t)));
+    CX_CHECK(blake3_update(hash, sizeof(hash_t)));
+    CX_CHECK(blake3_update(range_proof_hash, sizeof(hash_t)));
+    CX_CHECK(blake3_final(hash));
+    CX_CHECK(mweb_sign(sig, sender_key, hash));
 end:
     return error;
 }

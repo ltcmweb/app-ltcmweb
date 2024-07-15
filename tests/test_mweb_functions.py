@@ -51,4 +51,12 @@ def test_mweb_output_create(backend, firmware):
     for _ in range(100):
         A = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         B = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
-        run_test(backend, 10, randbytes(8) + A + B + randbytes(32))
+        sender_key = randbytes(32)
+        data = randbytes(8) + A + B + sender_key
+        resp_go = run_go(10, data)
+        range_proof_hash = resp_go[-96:-64]
+        resp = backend.exchange(0xeb, 0x99, 10, 0x00, data).data
+        resp += range_proof_hash
+        data = range_proof_hash + sender_key
+        resp += backend.exchange(0xeb, 0x99, 11, 0x00, data).data
+        assert resp_go == resp

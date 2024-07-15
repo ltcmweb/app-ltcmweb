@@ -105,6 +105,7 @@ func main() {
 			Spend: (*mw.PublicKey)(B.SerializeCompressed()),
 		}
 		output, blind, shared := mweb.CreateOutput(recipient, senderKey)
+		mweb.SignOutput(output, recipient.Value, blind, senderKey)
 		var buf bytes.Buffer
 		binary.Write(&buf, binary.LittleEndian, output.Commitment)
 		binary.Write(&buf, binary.LittleEndian, output.SenderPubKey)
@@ -112,6 +113,8 @@ func main() {
 		output.Message.Serialize(&buf)
 		binary.Write(&buf, binary.LittleEndian, blind)
 		binary.Write(&buf, binary.LittleEndian, shared)
+		binary.Write(&buf, binary.LittleEndian, output.RangeProofHash)
+		binary.Write(&buf, binary.LittleEndian, output.Signature)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	}
 }
