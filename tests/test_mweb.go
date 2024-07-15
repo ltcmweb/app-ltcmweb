@@ -83,5 +83,11 @@ func main() {
 		binary.Write(&buf, binary.LittleEndian, commit)
 		binary.Write(&buf, binary.LittleEndian, commit.PubKey())
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
+	case 9:
+		blind := &mw.BlindingFactor{}
+		var value uint64
+		binary.Read(r, binary.LittleEndian, blind)
+		binary.Read(r, binary.LittleEndian, &value)
+		fmt.Println(hex.EncodeToString(mw.BlindSwitch(blind, value)[:]))
 	}
 }

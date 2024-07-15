@@ -41,3 +41,7 @@ def test_mweb_sign_kernel(backend, firmware):
 def test_mweb_new_commit(backend, firmware):
     for _ in range(100):
         run_test(backend, 8, randbytes(40))
+
+def test_mweb_switch_commit(backend, firmware):
+    for _ in range(100):
+        run_test(backend, 9, randbytes(40))
