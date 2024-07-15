@@ -14,7 +14,6 @@
 #include "extensions.h"
 
 #include "../mweb/kernel.h"
-#include "../mweb/output.h"
 
 unsigned short test_set_keychain(buffer_t *buffer) {
   if (!buffer_read(buffer, context.mwebKeychain.scan, sizeof(secret_key_t))) {
@@ -139,7 +138,7 @@ end:
 unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   blinding_factor_t kernel_blind, stealth_blind;
   commitment_t kernel_excess;
-  public_key_t kernel_excess_pubkey, stealth_excess;
+  public_key_t stealth_excess;
   signature_t sig;
   cx_err_t error;
 
@@ -149,10 +148,10 @@ unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   if (!buffer_read(buffer, stealth_blind, sizeof(stealth_blind))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(new_commit(kernel_excess, kernel_excess_pubkey, kernel_blind, 0));
+  CX_CHECK(new_commit(kernel_excess, NULL, kernel_blind, 0));
   CX_CHECK(blake3_update("\x10", 1));
   CX_CHECK(blake3_update(kernel_excess, sizeof(kernel_excess)));
-  CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind, kernel_excess_pubkey, stealth_excess, sig));
+  CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind, stealth_excess, sig));
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:
   return io_send_sw(error);
@@ -200,11 +199,6 @@ unsigned short test_mweb_output_create(buffer_t *buffer) {
   uint64_t value;
   uint8_t pA[65], pB[65];
   secret_key_t sender_key;
-  struct {
-    mweb_output_t output;
-    blinding_factor_t blind;
-    secret_key_t shared;
-  } data;
   cx_err_t error;
 
   if (!buffer_read_u64(buffer, &value, LE)) {
@@ -219,8 +213,9 @@ unsigned short test_mweb_output_create(buffer_t *buffer) {
   if (!buffer_read(buffer, sender_key, sizeof(sender_key))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(mweb_output_create(&data.output, data.blind, data.shared, value, pA, pB, sender_key));
-  return io_send_response_pointer((uint8_t*)&data, sizeof(data), SW_OK);
+  CX_CHECK(mweb_output_create(&context.mweb.output.output, context.mweb.output.blind,
+                              context.mweb.output.shared, value, pA, pB, sender_key));
+  return io_send_response_pointer((uint8_t*)&context.mweb.output, sizeof(context.mweb.output), SW_OK);
 end:
   return io_send_sw(error);
 }

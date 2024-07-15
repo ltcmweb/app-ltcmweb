@@ -54,28 +54,16 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
-    if (!buffer_read_u32(buffer, &context.mwebTxContext.n_inputs, LE)) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
-    if (!buffer_read(buffer, context.mwebTxContext.output_key, sizeof(secret_key_t))) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
-    if (!buffer_read(buffer, context.mwebTxContext.kernel_blind, sizeof(blinding_factor_t))) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
-    if (!buffer_read(buffer, context.mwebTxContext.kernel_excess_pubkey, sizeof(public_key_t))) {
+    if (!buffer_read_u32(buffer, &context.mweb.input.count, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
     CX_CHECK(keychain_init(&context.mwebKeychain, bip32_path, bip32_path_len));
-    memset(context.mwebTxContext.input_key, 0, sizeof(secret_key_t));
+    memset(context.mwebStealthOffset, 0, sizeof(blinding_factor_t));
 
     return io_send_sw(SW_OK);
 
-  } else if (context.mwebTxContext.n_inputs) {  // parse inputs
+  } else if (context.mweb.input.count) {  // parse inputs
     coin_t coin;
     secret_key_t key;
 
@@ -86,11 +74,11 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
     CX_CHECK(keychain_spend_key(&context.mwebKeychain, coin.address_index, key));
     CX_CHECK(calculate_output_key(&coin, key));
     cx_rng(key, sizeof(key));
-    CX_CHECK(mweb_input_create(&context.mwebTxContext.input, &coin, key));
-    CX_CHECK(sk_add(context.mwebTxContext.input_key, key, context.mwebTxContext.input_key));
-    CX_CHECK(sk_sub(context.mwebTxContext.input_key, context.mwebTxContext.input_key, coin.spend_key));
+    CX_CHECK(mweb_input_create(&context.mweb.input.input, &coin, key));
+    CX_CHECK(sk_add(context.mwebStealthOffset, key, context.mwebStealthOffset));
+    CX_CHECK(sk_sub(context.mwebStealthOffset, context.mwebStealthOffset, coin.spend_key));
 
-    context.mwebTxContext.n_inputs--;
+    context.mweb.input.count--;
 
     if (!request_mweb_input_approval(&coin)) {
       return io_send_sw(SW_TECHNICAL_PROBLEM);
@@ -116,13 +104,10 @@ unsigned short handler_mweb_sign_tx(buffer_t *buffer, uint8_t chunk, bool more) 
 
     cx_rng(stealth_blind, sizeof(stealth_blind));
 
-    CX_CHECK(sk_add(data.stealth_offset, context.mwebTxContext.input_key, context.mwebTxContext.output_key));
-    CX_CHECK(sk_sub(data.stealth_offset, data.stealth_offset, stealth_blind));
+    CX_CHECK(sk_sub(data.stealth_offset, context.mwebStealthOffset, stealth_blind));
 
-    CX_CHECK(sign_mweb_kernel(
-      context.mwebTxContext.kernel_blind, stealth_blind,
-      context.mwebTxContext.kernel_excess_pubkey,
-      data.stealth_excess, data.kernel_sig));
+    CX_CHECK(sign_mweb_kernel(context.mweb.kernel.blind, stealth_blind,
+                              data.stealth_excess, data.kernel_sig));
 
     return io_send_response_pointer((uint8_t*)&data, sizeof(data), SW_OK);
   }
@@ -134,7 +119,7 @@ end:
 
 int user_action_mweb_input(unsigned char confirming) {
   if (confirming) {
-    return io_send_response_pointer((uint8_t*)&context.mwebTxContext.input, sizeof(mweb_input_t), SW_OK);
+    return io_send_response_pointer((uint8_t*)&context.mweb.input.input, sizeof(mweb_input_t), SW_OK);
   } else {
     return io_send_sw(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
   }

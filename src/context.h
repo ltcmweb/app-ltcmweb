@@ -25,6 +25,7 @@
 #endif // HAVE_NBGL
 
 #include "mweb/input.h"
+#include "mweb/output.h"
 #include "mweb/keychain.h"
 
 #define MAX_OUTPUT_TO_CHECK 100
@@ -132,15 +133,23 @@ struct tmp_output_s {
 };
 typedef struct tmp_output_s tmp_output_t;
 
-struct mweb_transaction_context_s {
-  uint32_t n_inputs;
+struct mweb_input_context_s {
+  uint32_t count;
   mweb_input_t input;
-  secret_key_t input_key;
-  secret_key_t output_key;
-  blinding_factor_t kernel_blind;
-  public_key_t kernel_excess_pubkey;
 };
-typedef struct mweb_transaction_context_s mweb_transaction_context_t;
+typedef struct mweb_input_context_s mweb_input_context_t;
+
+struct mweb_output_context_s {
+  mweb_output_t output;
+  blinding_factor_t blind;
+  secret_key_t shared;
+};
+typedef struct mweb_output_context_s mweb_output_context_t;
+
+struct mweb_kernel_context_s {
+  blinding_factor_t blind;
+};
+typedef struct mweb_kernel_context_s mweb_kernel_context_t;
 
 struct context_s {
   /** Index of the output to convert into a trusted input in a transaction */
@@ -172,7 +181,12 @@ struct context_s {
   /* /Segregated Witness changes */
 
   /* MWEB */
-  mweb_transaction_context_t mwebTxContext;
+  union {
+    struct mweb_input_context_s input;
+    struct mweb_output_context_s output;
+    struct mweb_kernel_context_s kernel;
+  } mweb;
+  blinding_factor_t mwebStealthOffset;
   keychain_t mwebKeychain;
 
   /** Size currently available to the transaction parser */
