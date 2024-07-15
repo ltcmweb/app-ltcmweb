@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ltcmweb/ltcd/chaincfg"
 	"github.com/ltcmweb/ltcd/chaincfg/chainhash"
 	"github.com/ltcmweb/ltcd/ltcutil"
@@ -89,5 +90,28 @@ func main() {
 		binary.Read(r, binary.LittleEndian, blind)
 		binary.Read(r, binary.LittleEndian, &value)
 		fmt.Println(hex.EncodeToString(mw.BlindSwitch(blind, value)[:]))
+	case 10:
+		var pA, pB [65]byte
+		recipient := &mweb.Recipient{}
+		senderKey := &mw.SecretKey{}
+		binary.Read(r, binary.LittleEndian, &recipient.Value)
+		binary.Read(r, binary.LittleEndian, &pA)
+		binary.Read(r, binary.LittleEndian, &pB)
+		binary.Read(r, binary.LittleEndian, senderKey)
+		A, _ := secp256k1.ParsePubKey(pA[:])
+		B, _ := secp256k1.ParsePubKey(pB[:])
+		recipient.Address = &mw.StealthAddress{
+			Scan:  (*mw.PublicKey)(A.SerializeCompressed()),
+			Spend: (*mw.PublicKey)(B.SerializeCompressed()),
+		}
+		output, blind, shared := mweb.CreateOutput(recipient, senderKey)
+		var buf bytes.Buffer
+		binary.Write(&buf, binary.LittleEndian, output.Commitment)
+		binary.Write(&buf, binary.LittleEndian, output.SenderPubKey)
+		binary.Write(&buf, binary.LittleEndian, output.ReceiverPubKey)
+		output.Message.Serialize(&buf)
+		binary.Write(&buf, binary.LittleEndian, blind)
+		binary.Write(&buf, binary.LittleEndian, shared)
+		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	}
 }

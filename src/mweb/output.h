@@ -18,6 +18,6 @@ typedef struct {
 } mweb_output_t;
 
 cx_err_t mweb_output_create(mweb_output_t *output,
-    blinding_factor_t blind, uint64_t value,
-    const uint8_t *pA, const uint8_t *pB,
+    blinding_factor_t blind, secret_key_t shared,
+    uint64_t value, const uint8_t *pA, const uint8_t *pB,
     const secret_key_t sender_key);

@@ -1,3 +1,4 @@
+from ecdsa import SigningKey, SECP256k1
 from random import randbytes
 import subprocess
 
@@ -45,3 +46,9 @@ def test_mweb_new_commit(backend, firmware):
 def test_mweb_new_blind_switch(backend, firmware):
     for _ in range(100):
         run_test(backend, 9, randbytes(40))
+
+def test_mweb_output_create(backend, firmware):
+    for _ in range(100):
+        A = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
+        B = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
+        run_test(backend, 10, randbytes(8) + A + B + randbytes(32))

@@ -4,13 +4,13 @@
 #define MWEB_OUTPUT_MESSAGE_STANDARD_FIELDS_FEATURE_BIT 1
 
 cx_err_t mweb_output_create(mweb_output_t *output,
-    blinding_factor_t blind, uint64_t v,
-    const uint8_t *pA, const uint8_t *pB,
+    blinding_factor_t blind, secret_key_t t,
+    uint64_t v, const uint8_t *pA, const uint8_t *pB,
     const secret_key_t sender_key)
 {
     public_key_t A, B, sA;
     hash_t n, h;
-    secret_key_t s, t;
+    secret_key_t s;
     uint8_t pt[65];
     blinding_factor_t blind_switch;
     cx_err_t error;
@@ -44,7 +44,7 @@ cx_err_t mweb_output_create(mweb_output_t *output,
 
     // Construct one-time public key for receiver 'Ko' = H(T_outkey, t)*B
     CX_CHECK(blake3_update("O", 1));
-    CX_CHECK(blake3_update(t, sizeof(t)));
+    CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(h));
     memcpy(pt, pB, sizeof(pt));
     CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, h, 32));
@@ -57,18 +57,18 @@ cx_err_t mweb_output_create(mweb_output_t *output,
 
     // Calc blinding factor and mask nonce and amount
     CX_CHECK(blake3_update("B", 1));
-    CX_CHECK(blake3_update(t, sizeof(t)));
+    CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(blind));
 
     CX_CHECK(blake3_update("Y", 1));
-    CX_CHECK(blake3_update(t, sizeof(t)));
+    CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(h));
     for (int i = 0; i < 8; i++) {
         output->message.masked_value[i] = (v >> i*8 & 0xFF) ^ h[i];
     }
 
     CX_CHECK(blake3_update("X", 1));
-    CX_CHECK(blake3_update(t, sizeof(t)));
+    CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(h));
     for (int i = 0; i < 16; i++) {
         output->message.masked_nonce[i] = n[i] ^ h[i];

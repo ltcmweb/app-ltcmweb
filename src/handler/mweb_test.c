@@ -13,8 +13,8 @@
 #include "context.h"
 #include "extensions.h"
 
-#include "../mweb/commit.h"
 #include "../mweb/kernel.h"
+#include "../mweb/output.h"
 
 unsigned short test_set_keychain(buffer_t *buffer) {
   if (!buffer_read(buffer, context.mwebKeychain.scan, sizeof(secret_key_t))) {
@@ -196,6 +196,35 @@ end:
   return io_send_sw(error);
 }
 
+unsigned short test_mweb_output_create(buffer_t *buffer) {
+  uint64_t value;
+  uint8_t pA[65], pB[65];
+  secret_key_t sender_key;
+  struct {
+    mweb_output_t output;
+    blinding_factor_t blind;
+    secret_key_t shared;
+  } data;
+  cx_err_t error;
+
+  if (!buffer_read_u64(buffer, &value, LE)) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, pA, sizeof(pA))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, pB, sizeof(pB))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read(buffer, sender_key, sizeof(sender_key))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  CX_CHECK(mweb_output_create(&data.output, data.blind, data.shared, value, pA, pB, sender_key));
+  return io_send_response_pointer((uint8_t*)&data, sizeof(data), SW_OK);
+end:
+  return io_send_sw(error);
+}
+
 unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   switch (op) {
   case 0: return test_set_keychain(buffer);
@@ -208,6 +237,7 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   case 7: return test_sign_mweb_kernel(buffer);
   case 8: return test_new_commit(buffer);
   case 9: return test_new_blind_switch(buffer);
+  case 10: return test_mweb_output_create(buffer);
   }
   return io_send_sw(SW_INCORRECT_P1_P2);
 }
