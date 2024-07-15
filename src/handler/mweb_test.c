@@ -179,7 +179,7 @@ end:
   return io_send_sw(error);
 }
 
-unsigned short test_switch_commit(buffer_t *buffer) {
+unsigned short test_new_blind_switch(buffer_t *buffer) {
   blinding_factor_t blind, blind_switch;
   uint64_t value;
   cx_err_t error;
@@ -190,7 +190,7 @@ unsigned short test_switch_commit(buffer_t *buffer) {
   if (!buffer_read_u64(buffer, &value, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(switch_commit(blind_switch, blind, value));
+  CX_CHECK(new_blind_switch(blind_switch, blind, value));
   return io_send_response_pointer(blind_switch, sizeof(blind_switch), SW_OK);
 end:
   return io_send_sw(error);
@@ -207,7 +207,7 @@ unsigned short handler_mweb_test(buffer_t *buffer, uint8_t op) {
   case 6: return test_keychain_address(buffer);
   case 7: return test_sign_mweb_kernel(buffer);
   case 8: return test_new_commit(buffer);
-  case 9: return test_switch_commit(buffer);
+  case 9: return test_new_blind_switch(buffer);
   }
   return io_send_sw(SW_INCORRECT_P1_P2);
 }

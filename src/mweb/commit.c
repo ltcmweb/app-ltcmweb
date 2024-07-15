@@ -29,7 +29,7 @@ end:
     return error;
 }
 
-cx_err_t switch_commit(blinding_factor_t blind_switch,
+cx_err_t new_blind_switch(blinding_factor_t blind_switch,
     const blinding_factor_t blind, uint64_t value)
 {
     commitment_t commit;
