@@ -1,11 +1,13 @@
 #pragma once
 
 #include "coin.h"
+#include "commit.h"
 #include "sign.h"
 
 typedef struct {
     uint8_t features;
     hash_t output_id;
+    commitment_t commit;
     public_key_t input_pubkey;
     public_key_t output_pubkey;
     signature_t sig;

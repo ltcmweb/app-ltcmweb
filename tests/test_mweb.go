@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/ltcmweb/ltcd/ltcutil"
 	"github.com/ltcmweb/ltcd/ltcutil/mweb"
 	"github.com/ltcmweb/ltcd/ltcutil/mweb/mw"
+	"github.com/ltcmweb/ltcd/wire"
 )
 
 func main() {
@@ -23,98 +25,130 @@ func main() {
 	case 1:
 		coin := &mweb.Coin{SharedSecret: &mw.SecretKey{}}
 		spendKey := &mw.SecretKey{}
-		binary.Read(r, binary.LittleEndian, coin.SharedSecret)
-		binary.Read(r, binary.LittleEndian, spendKey)
+		read(r, coin.SharedSecret, spendKey)
 		coin.CalculateOutputKey(spendKey)
 		fmt.Println(hex.EncodeToString(coin.SpendKey[:]))
 	case 2:
-		coin := &mweb.Coin{OutputId: &chainhash.Hash{}, SpendKey: &mw.SecretKey{}}
+		coin := &mweb.Coin{
+			Blind:    &mw.BlindingFactor{},
+			OutputId: &chainhash.Hash{},
+			SpendKey: &mw.SecretKey{},
+		}
 		inputKey := &mw.SecretKey{}
-		binary.Read(r, binary.LittleEndian, coin.OutputId)
-		binary.Read(r, binary.LittleEndian, coin.SpendKey)
-		binary.Read(r, binary.LittleEndian, inputKey)
+		read(r, coin.Blind, &coin.Value, coin.OutputId, coin.SpendKey, inputKey)
 		input := mweb.CreateInput(coin, inputKey)
 		var buf bytes.Buffer
-		binary.Write(&buf, binary.LittleEndian, input.Features)
-		binary.Write(&buf, binary.LittleEndian, input.OutputId)
-		binary.Write(&buf, binary.LittleEndian, input.InputPubKey)
-		binary.Write(&buf, binary.LittleEndian, input.OutputPubKey)
-		binary.Write(&buf, binary.LittleEndian, input.Signature)
+		write(&buf, input.Features, input.OutputId, input.Commitment,
+			input.InputPubKey, input.OutputPubKey, input.Signature)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	case 3:
 		key := &mw.SecretKey{}
 		msg := &chainhash.Hash{}
-		binary.Read(r, binary.LittleEndian, key)
-		binary.Read(r, binary.LittleEndian, msg)
+		read(r, key, msg)
 		sig := mw.Sign(key, msg[:])
 		fmt.Println(hex.EncodeToString(sig[:]))
 	case 4:
 		key := &mw.SecretKey{}
-		binary.Read(r, binary.LittleEndian, key)
+		read(r, key)
 		fmt.Println(hex.EncodeToString(key.PubKey()[:]))
 	case 5:
 		keychain := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
 		var index uint32
-		binary.Read(r, binary.LittleEndian, keychain.Scan)
-		binary.Read(r, binary.LittleEndian, keychain.Spend)
-		binary.Read(r, binary.LittleEndian, &index)
+		read(r, keychain.Scan, keychain.Spend, &index)
 		fmt.Println(hex.EncodeToString(keychain.SpendKey(index)[:]))
 	case 6:
 		keychain := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
 		var index uint32
-		binary.Read(r, binary.LittleEndian, keychain.Scan)
-		binary.Read(r, binary.LittleEndian, keychain.Spend)
-		binary.Read(r, binary.LittleEndian, &index)
+		read(r, keychain.Scan, keychain.Spend, &index)
 		addr := ltcutil.NewAddressMweb(keychain.Address(index), &chaincfg.MainNetParams)
 		fmt.Println(hex.EncodeToString([]byte(addr.String())))
 	case 7:
 		kernelBlind := &mw.BlindingFactor{}
 		stealthBlind := &mw.BlindingFactor{}
-		binary.Read(r, binary.LittleEndian, kernelBlind)
-		binary.Read(r, binary.LittleEndian, stealthBlind)
+		read(r, kernelBlind, stealthBlind)
 		kernel := mweb.CreateKernel(kernelBlind, stealthBlind, nil, nil, nil, nil)
 		fmt.Println(hex.EncodeToString(kernel.Signature[:]))
 	case 8:
 		blind := &mw.BlindingFactor{}
 		var value uint64
-		binary.Read(r, binary.LittleEndian, blind)
-		binary.Read(r, binary.LittleEndian, &value)
+		read(r, blind, &value)
 		commit := mw.NewCommitment(blind, value)
 		var buf bytes.Buffer
-		binary.Write(&buf, binary.LittleEndian, commit)
-		binary.Write(&buf, binary.LittleEndian, commit.PubKey())
+		write(&buf, commit, commit.PubKey())
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	case 9:
 		blind := &mw.BlindingFactor{}
 		var value uint64
-		binary.Read(r, binary.LittleEndian, blind)
-		binary.Read(r, binary.LittleEndian, &value)
+		read(r, blind, &value)
 		fmt.Println(hex.EncodeToString(mw.BlindSwitch(blind, value)[:]))
 	case 10:
-		var pA, pB [65]byte
 		recipient := &mweb.Recipient{}
 		senderKey := &mw.SecretKey{}
-		binary.Read(r, binary.LittleEndian, &recipient.Value)
-		binary.Read(r, binary.LittleEndian, &pA)
-		binary.Read(r, binary.LittleEndian, &pB)
-		binary.Read(r, binary.LittleEndian, senderKey)
-		A, _ := secp256k1.ParsePubKey(pA[:])
-		B, _ := secp256k1.ParsePubKey(pB[:])
+		read(r, &recipient.Value)
 		recipient.Address = &mw.StealthAddress{
-			Scan:  (*mw.PublicKey)(A.SerializeCompressed()),
-			Spend: (*mw.PublicKey)(B.SerializeCompressed()),
+			Scan: readPubkey(r), Spend: readPubkey(r),
 		}
+		read(r, senderKey)
 		output, blind, shared := mweb.CreateOutput(recipient, senderKey)
 		mweb.SignOutput(output, recipient.Value, blind, senderKey)
 		var buf bytes.Buffer
-		binary.Write(&buf, binary.LittleEndian, output.Commitment)
-		binary.Write(&buf, binary.LittleEndian, output.SenderPubKey)
-		binary.Write(&buf, binary.LittleEndian, output.ReceiverPubKey)
+		write(&buf, output.Commitment, output.SenderPubKey, output.ReceiverPubKey)
 		output.Message.Serialize(&buf)
-		binary.Write(&buf, binary.LittleEndian, blind)
-		binary.Write(&buf, binary.LittleEndian, shared)
-		binary.Write(&buf, binary.LittleEndian, output.RangeProofHash)
-		binary.Write(&buf, binary.LittleEndian, output.Signature)
+		write(&buf, blind, shared, output.RangeProofHash, output.Signature)
+		fmt.Println(hex.EncodeToString(buf.Bytes()))
+	case 12:
+		keys := &mweb.Keychain{Scan: &mw.SecretKey{}, Spend: &mw.SecretKey{}}
+		coin := &mweb.Coin{
+			Blind:        &mw.BlindingFactor{},
+			OutputId:     &chainhash.Hash{},
+			SharedSecret: &mw.SecretKey{},
+		}
+		var addressIndex uint64
+		recipient := &mweb.Recipient{}
+		var fee, pegin uint64
+		var pegouts, lockHeight uint32
+		pegout := &wire.TxOut{PkScript: make([]byte, 40)}
+		read(r, keys.Scan, keys.Spend, coin.Blind, &coin.Value,
+			coin.OutputId, &addressIndex, coin.SharedSecret, &recipient.Value)
+		recipient.Address = &mw.StealthAddress{
+			Scan: readPubkey(r), Spend: readPubkey(r),
+		}
+		read(r, &fee, &pegin, &pegouts, &lockHeight, &pegout.Value, pegout.PkScript)
+		coin.CalculateOutputKey(keys.SpendKey(uint32(addressIndex)))
+		tx, newCoins, _ := mweb.NewTransaction([]*mweb.Coin{coin},
+			[]*mweb.Recipient{recipient}, fee, pegin, []*wire.TxOut{pegout}, nil)
+		var buf bytes.Buffer
+		input := tx.TxBody.Inputs[0]
+		output := tx.TxBody.Outputs[0]
+		kernel := tx.TxBody.Kernels[0]
+		write(&buf, input.Features, input.OutputId, input.Commitment,
+			input.InputPubKey, input.OutputPubKey, input.Signature,
+			output.Commitment, output.SenderPubKey, output.ReceiverPubKey,
+			output.Message.Features, output.Message.KeyExchangePubKey,
+			output.Message.ViewTag, output.Message.MaskedValue,
+			output.Message.MaskedNonce.FillBytes(make([]byte, 16)),
+			newCoins[0].Blind, newCoins[0].SharedSecret, output.Signature,
+			tx.KernelOffset, tx.StealthOffset, kernel.Excess,
+			kernel.StealthExcess, kernel.Signature)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	}
+}
+
+func read(r io.Reader, xs ...any) {
+	for _, x := range xs {
+		binary.Read(r, binary.LittleEndian, x)
+	}
+}
+
+func write(w io.Writer, xs ...any) {
+	for _, x := range xs {
+		binary.Write(w, binary.LittleEndian, x)
+	}
+}
+
+func readPubkey(r io.Reader) *mw.PublicKey {
+	var p [65]byte
+	read(r, &p)
+	P, _ := secp256k1.ParsePubKey(p[:])
+	return (*mw.PublicKey)(P.SerializeCompressed())
 }

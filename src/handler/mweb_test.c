@@ -43,11 +43,16 @@ end:
 }
 
 unsigned short test_mweb_input_create(buffer_t *buffer) {
-  mweb_input_t input;
   coin_t coin;
   secret_key_t input_key;
   cx_err_t error;
 
+  if (!buffer_read(buffer, coin.blind, sizeof(coin.blind))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+  if (!buffer_read_u64(buffer, &coin.value, LE)) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
   if (!buffer_read(buffer, coin.output_id, sizeof(coin.output_id))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
@@ -57,8 +62,8 @@ unsigned short test_mweb_input_create(buffer_t *buffer) {
   if (!buffer_read(buffer, input_key, sizeof(input_key))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(mweb_input_create(&input, &coin, input_key));
-  return io_send_response_pointer((uint8_t*)&input, sizeof(input), SW_OK);
+  CX_CHECK(mweb_input_create(&context.mweb.input.input, &coin, input_key));
+  return io_send_response_pointer((uint8_t*)&context.mweb.input.input, sizeof(mweb_input_t), SW_OK);
 end:
   return io_send_sw(error);
 }

@@ -1,17 +1,20 @@
-#include "coin.h"
 #include "input.h"
-#include "sign.h"
 
 #define MWEB_INPUT_STEALTH_KEY_FEATURE_BIT 1
 
 cx_err_t mweb_input_create(mweb_input_t *input, const coin_t *coin, const secret_key_t input_key)
 {
+    blinding_factor_t blind;
     hash_t key_hash, msg_hash;
     secret_key_t sig_key;
     cx_err_t error;
 
     input->features = MWEB_INPUT_STEALTH_KEY_FEATURE_BIT;
     memcpy(input->output_id, coin->output_id, sizeof(hash_t));
+
+    CX_CHECK(new_blind_switch(blind, coin->blind, coin->value));
+    CX_CHECK(new_commit(input->commit, NULL, blind, coin->value));
+
     CX_CHECK(sk_pub(input->input_pubkey, input_key));
     CX_CHECK(sk_pub(input->output_pubkey, coin->spend_key));
 

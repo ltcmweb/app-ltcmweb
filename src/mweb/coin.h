@@ -7,7 +7,7 @@ typedef struct {
     blinding_factor_t blind;
     uint64_t value;
     hash_t output_id;
-    uint32_t address_index;
+    uint64_t address_index;
     secret_key_t shared_secret;
     secret_key_t spend_key;
 } coin_t;
