@@ -132,11 +132,3 @@ pegouts_done:
 end:
   return io_send_sw(error);
 }
-
-int user_action_mweb_input(unsigned char confirming) {
-  if (confirming) {
-    return io_send_response_pointer((uint8_t*)&context.mweb.input.input, sizeof(mweb_input_t), SW_OK);
-  } else {
-    return io_send_sw(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
-  }
-}

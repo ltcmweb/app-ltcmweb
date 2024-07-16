@@ -57,5 +57,3 @@ int user_action_signtx(unsigned char confirming, unsigned char direct);
 
 // MWEB
 void display_mweb_address(const char *address);
-int request_mweb_input_approval(const coin_t *coin);
-int user_action_mweb_input(unsigned char confirming);

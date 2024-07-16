@@ -29,7 +29,6 @@ union display_variables {
     char fullAddress[130]; // the address
     char fullAmount[28];  // full amount
     char feesAmount[28];  // fees
-    char hash[65];
   } tmp;
 
   struct {

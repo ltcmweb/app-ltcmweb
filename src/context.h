@@ -134,7 +134,6 @@ struct tmp_output_s {
 typedef struct tmp_output_s tmp_output_t;
 
 struct mweb_input_context_s {
-  coin_t coin;
   mweb_input_t input;
 };
 

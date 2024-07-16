@@ -102,24 +102,6 @@ static unsigned int io_seproxyhal_touch_sign_ok(const bagl_element_t *e) {
   return 0; // DO NOT REDRAW THE BUTTON
 }
 
-static unsigned int io_seproxyhal_touch_mweb_input_cancel(const bagl_element_t *e) {
-  UNUSED(e);
-  // user denied the transaction, tell the USB side
-  user_action_mweb_input(0);
-  // redraw ui
-  ui_idle_flow();
-  return 0; // DO NOT REDRAW THE BUTTON
-}
-
-static unsigned int io_seproxyhal_touch_mweb_input_ok(const bagl_element_t *e) {
-  UNUSED(e);
-  // user accepted the transaction, tell the USB side
-  user_action_mweb_input(1);
-  // redraw ui
-  ui_idle_flow();
-  return 0; // DO NOT REDRAW THE BUTTON
-}
-
 void io_seproxyhal_display(const bagl_element_t *element) {
   if ((element->component.type & (~BAGL_TYPE_FLAGS_MASK)) != BAGL_NONE) {
     io_seproxyhal_display_default((bagl_element_t *)element);
@@ -411,41 +393,6 @@ UX_FLOW(ux_request_segwit_input_approval_flow,
         &ux_request_segwit_input_approval_flow_4_step,
         &ux_request_segwit_input_approval_flow_5_step);
 
-//////////////////////////////////////////////////////////////////////
-UX_STEP_NOCB(ux_request_mweb_input_approval_flow_1_step, pnn,
-             {
-                 &C_icon_eye, "Review", "Input",
-             });
-UX_STEP_NOCB(ux_request_mweb_input_approval_flow_2_step, bnnn_paging,
-             {
-                 .title = "Address",
-                 .text = vars.tmp.fullAddress,
-             });
-UX_STEP_NOCB(ux_request_mweb_input_approval_flow_3_step, bnnn_paging,
-             {
-                 .title = "Output ID",
-                 .text = vars.tmp.hash,
-             });
-UX_STEP_CB(ux_request_mweb_input_approval_flow_4_step, pb,
-           io_seproxyhal_touch_mweb_input_ok(NULL),
-           {
-               &C_icon_validate_14,
-               "Approve",
-           });
-UX_STEP_CB(ux_request_mweb_input_approval_flow_5_step, pb,
-           io_seproxyhal_touch_mweb_input_cancel(NULL),
-           {
-               &C_icon_crossmark,
-               "Reject",
-           });
-
-UX_FLOW(ux_request_mweb_input_approval_flow,
-        &ux_request_mweb_input_approval_flow_1_step,
-        &ux_request_mweb_input_approval_flow_2_step,
-        &ux_request_mweb_input_approval_flow_3_step,
-        &ux_request_mweb_input_approval_flow_4_step,
-        &ux_request_mweb_input_approval_flow_5_step);
-
 void ui_sign_message_flow(void) { ux_flow_init(0, ux_sign_flow, NULL); }
 
 void ui_confirm_single_flow(void) {
@@ -486,10 +433,6 @@ void ui_request_sign_path_approval_flow(void) {
 
 void ui_request_segwit_input_approval_flow(void) {
   ux_flow_init(0, ux_request_segwit_input_approval_flow, NULL);
-}
-
-void ui_request_mweb_input_approval_flow(void) {
-  ux_flow_init(0, ux_request_mweb_input_approval_flow, NULL);
 }
 
 void ui_idle_flow(void) {

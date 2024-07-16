@@ -304,12 +304,3 @@ void request_sign_path_approval(unsigned char *change_path) {
 void request_segwit_input_approval(void) {
   ui_request_segwit_input_approval_flow();
 }
-
-int request_mweb_input_approval(const coin_t *coin) {
-  if (keychain_address(&context.mwebKeychain, coin->address_index, vars.tmp.fullAddress)) {
-    return 0;
-  }
-  format_hex(coin->output_id, sizeof(hash_t), vars.tmp.hash, sizeof(vars.tmp.hash));
-  ui_request_mweb_input_approval_flow();
-  return 1;
-}
