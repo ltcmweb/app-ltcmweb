@@ -146,17 +146,6 @@ mweb:
     buf.offset = 0;
     return handler_mweb_get_public_key(&buf, (bool)cmd->p1);
 
-  case INS_MWEB_SIGN_TX:
-    PRINTF("MWEB Sign tx\n");
-    if (!cmd->data) {
-      return io_send_sw(SW_INCORRECT_LENGTH);
-    }
-
-    buf.ptr = cmd->data;
-    buf.size = cmd->lc;
-    buf.offset = 0;
-    return handler_mweb_sign_tx(&buf, cmd->p1, (bool)cmd->p2);
-
   case INS_MWEB_ADD_INPUT:
     PRINTF("MWEB Add input\n");
     if (!cmd->data) {
@@ -189,6 +178,17 @@ mweb:
     buf.size = cmd->lc;
     buf.offset = 0;
     return handler_mweb_sign_output(&buf);
+
+  case INS_MWEB_SIGN_KERNEL:
+    PRINTF("MWEB Sign kernel\n");
+    if (!cmd->data) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    buf.ptr = cmd->data;
+    buf.size = cmd->lc;
+    buf.offset = 0;
+    return handler_mweb_sign_kernel(&buf, (bool)cmd->p1);
 
   case INS_MWEB_TEST:
     PRINTF("MWEB Test\n");

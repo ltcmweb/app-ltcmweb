@@ -51,9 +51,9 @@ unsigned short handler_mweb_sign_output(buffer_t *buffer) {
                             range_proof_hash, context.mweb.output.senderKey));
 
   CX_CHECK(new_blind_switch(blind, context.mweb.output.result.blind, context.mweb.output.value));
-  CX_CHECK(sk_add(context.mwebBlindSum, context.mwebBlindSum, blind));
+  CX_CHECK(sk_add(context.mwebKernelBlind, context.mwebKernelBlind, blind));
 
-  CX_CHECK(sk_add(context.mwebStealthOffset, context.mweb.output.senderKey, context.mwebStealthOffset));
+  CX_CHECK(sk_add(context.mwebResult.stealthOffset, context.mweb.output.senderKey, context.mwebResult.stealthOffset));
 
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:
