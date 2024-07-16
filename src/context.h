@@ -153,6 +153,7 @@ struct mweb_kernel_context_s {
   uint64_t pegin;
   uint32_t pegouts;
   uint32_t lockHeight;
+  blinding_factor_t offset;
 };
 
 struct context_s {
@@ -191,7 +192,6 @@ struct context_s {
     struct mweb_kernel_context_s kernel;
   } mweb;
   blinding_factor_t mwebKernelBlind;
-  blinding_factor_t mwebKernelOffset;
   blinding_factor_t mwebStealthOffset;
   keychain_t mwebKeychain;
 

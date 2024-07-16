@@ -70,8 +70,8 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     if (context.mweb.kernel.lockHeight) features |= HEIGHT_LOCK_FEATURE_BIT;
     CX_CHECK(blake3_update(&features, 1));
 
-    cx_rng(context.mwebKernelOffset, sizeof(blinding_factor_t));
-    CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mwebKernelOffset));
+    cx_rng(context.mweb.kernel.offset, sizeof(blinding_factor_t));
+    CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mweb.kernel.offset));
 
     commitment_t kernelExcess;
     CX_CHECK(new_commit(kernelExcess, NULL, context.mwebKernelBlind, 0));
@@ -121,7 +121,7 @@ pegouts_done:
 
     cx_rng(stealthBlind, sizeof(stealthBlind));
     CX_CHECK(sk_sub(result.stealthOffset, context.mwebStealthOffset, stealthBlind));
-    memcpy(result.kernelOffset, context.mwebKernelOffset, sizeof(result.kernelOffset));
+    memcpy(result.kernelOffset, context.mweb.kernel.offset, sizeof(result.kernelOffset));
 
     CX_CHECK(new_commit(result.kernelExcess, NULL, context.mwebKernelBlind, 0));
     CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind, result.stealthExcess, result.sig));
