@@ -29,7 +29,7 @@ unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display) {
   CX_CHECK(keychain_init(&context.mwebKeychain, bip32_path, bip32_path_len));
 
   memset(context.mwebKernelBlind, 0, sizeof(blinding_factor_t));
-  memset(context.mwebResult.stealthOffset, 0, sizeof(blinding_factor_t));
+  memset(context.mwebStealthOffset, 0, sizeof(blinding_factor_t));
 
   if (display) {
     uint32_t address_index;

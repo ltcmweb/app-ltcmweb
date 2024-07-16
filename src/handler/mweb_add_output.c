@@ -33,6 +33,7 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
                               context.mweb.output.value, pA, pB,
                               context.mweb.output.senderKey));
 
+  return io_send_response_pointer((uint8_t*)&context.mweb.output.result, sizeof(context.mweb.output.result), SW_OK);
 end:
   return io_send_sw(error);
 }
@@ -53,7 +54,7 @@ unsigned short handler_mweb_sign_output(buffer_t *buffer) {
   CX_CHECK(new_blind_switch(blind, context.mweb.output.result.blind, context.mweb.output.value));
   CX_CHECK(sk_add(context.mwebKernelBlind, context.mwebKernelBlind, blind));
 
-  CX_CHECK(sk_add(context.mwebResult.stealthOffset, context.mweb.output.senderKey, context.mwebResult.stealthOffset));
+  CX_CHECK(sk_add(context.mwebStealthOffset, context.mweb.output.senderKey, context.mwebStealthOffset));
 
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:

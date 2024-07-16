@@ -70,10 +70,12 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     if (context.mweb.kernel.lockHeight) features |= HEIGHT_LOCK_FEATURE_BIT;
     CX_CHECK(blake3_update(&features, 1));
 
-    cx_rng(context.mwebResult.kernelOffset, sizeof(blinding_factor_t));
-    CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mwebResult.kernelOffset));
-    CX_CHECK(new_commit(context.mwebResult.kernelExcess, NULL, context.mwebKernelBlind, 0));
-    CX_CHECK(blake3_update(context.mwebResult.kernelExcess, sizeof(commitment_t)));
+    cx_rng(context.mwebKernelOffset, sizeof(blinding_factor_t));
+    CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mwebKernelOffset));
+
+    commitment_t kernelExcess;
+    CX_CHECK(new_commit(kernelExcess, NULL, context.mwebKernelBlind, 0));
+    CX_CHECK(blake3_update(kernelExcess, sizeof(kernelExcess)));
 
     if (context.mweb.kernel.fee) {
       CX_CHECK(hash_varint(context.mweb.kernel.fee));
@@ -109,14 +111,22 @@ pegouts_done:
     }
 
     blinding_factor_t stealthBlind;
+    struct {
+      blinding_factor_t kernelOffset;
+      blinding_factor_t stealthOffset;
+      commitment_t kernelExcess;
+      public_key_t stealthExcess;
+      signature_t sig;
+    } result;
+
     cx_rng(stealthBlind, sizeof(stealthBlind));
-    CX_CHECK(sk_sub(context.mwebResult.stealthOffset, context.mwebResult.stealthOffset, stealthBlind));
+    CX_CHECK(sk_sub(result.stealthOffset, context.mwebStealthOffset, stealthBlind));
+    memcpy(result.kernelOffset, context.mwebKernelOffset, sizeof(result.kernelOffset));
 
-    CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind,
-                              context.mwebResult.stealthExcess,
-                              context.mwebResult.kernelSig));
+    CX_CHECK(new_commit(result.kernelExcess, NULL, context.mwebKernelBlind, 0));
+    CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind, result.stealthExcess, result.sig));
 
-    return io_send_response_pointer((uint8_t*)&context.mwebResult, sizeof(context.mwebResult), SW_OK);
+    return io_send_response_pointer((uint8_t*)&result, sizeof(result), SW_OK);
   }
 
 end:

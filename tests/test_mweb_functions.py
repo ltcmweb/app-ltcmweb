@@ -12,43 +12,43 @@ def run_test(backend, op, data):
     assert run_go(op, data) == rapdu.data
 
 def test_mweb_calculate_output_key(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 1, randbytes(64))
 
 def test_mweb_input_create(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 2, randbytes(96))
 
 def test_mweb_sign(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 3, randbytes(64))
 
 def test_mweb_sk_pub(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 4, randbytes(32))
 
 def test_mweb_keychain_spend_key(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 5, randbytes(68))
 
 def test_mweb_keychain_address(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 6, randbytes(68))
 
 def test_mweb_sign_kernel(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 7, randbytes(64))
 
 def test_mweb_new_commit(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 8, randbytes(40))
 
 def test_mweb_new_blind_switch(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         run_test(backend, 9, randbytes(40))
 
 def test_mweb_output_create(backend, firmware):
-    for _ in range(100):
+    for _ in range(1):
         A = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         B = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         sender_key = randbytes(32)

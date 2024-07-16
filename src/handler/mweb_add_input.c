@@ -29,8 +29,8 @@ unsigned short handler_mweb_add_input(buffer_t *buffer) {
   CX_CHECK(new_blind_switch(blind, context.mweb.input.coin.blind, context.mweb.input.coin.value));
   CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, blind));
 
-  CX_CHECK(sk_add(context.mwebResult.stealthOffset, key, context.mwebResult.stealthOffset));
-  CX_CHECK(sk_sub(context.mwebResult.stealthOffset, context.mwebResult.stealthOffset, context.mweb.input.coin.spend_key));
+  CX_CHECK(sk_add(context.mwebStealthOffset, key, context.mwebStealthOffset));
+  CX_CHECK(sk_sub(context.mwebStealthOffset, context.mwebStealthOffset, context.mweb.input.coin.spend_key));
 
   return io_send_response_pointer((uint8_t*)&context.mweb.input.input, sizeof(mweb_input_t), SW_OK);
 end:

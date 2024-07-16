@@ -190,14 +190,9 @@ struct context_s {
     struct mweb_output_context_s output;
     struct mweb_kernel_context_s kernel;
   } mweb;
-  struct {
-    blinding_factor_t kernelOffset;
-    blinding_factor_t stealthOffset;
-    commitment_t kernelExcess;
-    public_key_t stealthExcess;
-    signature_t kernelSig;
-  } mwebResult;
   blinding_factor_t mwebKernelBlind;
+  blinding_factor_t mwebKernelOffset;
+  blinding_factor_t mwebStealthOffset;
   keychain_t mwebKeychain;
 
   /** Size currently available to the transaction parser */
