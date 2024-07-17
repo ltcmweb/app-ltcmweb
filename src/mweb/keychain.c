@@ -42,11 +42,11 @@ end:
     return error;
 }
 
-cx_err_t keychain_address(const keychain_t *k, uint32_t index, char *out)
+cx_err_t keychain_program(const keychain_t *k, uint32_t index, uint8_t *prog)
 {
     cx_ecfp_public_key_t spend_pub, pub;
     secret_key_t key;
-    uint8_t W[65], prog[66];
+    uint8_t W[65];
     cx_err_t error;
 
     CX_CHECK(sk_pub2(&spend_pub, k->spend));
@@ -56,7 +56,17 @@ cx_err_t keychain_address(const keychain_t *k, uint32_t index, char *out)
     compress_pubkey(prog + 33, W);
     CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, W, k->scan, 32));
     compress_pubkey(prog, W);
-    CX_CHECK(!segwit_addr_encode(out, "ltcmweb", 0, prog, sizeof(prog)));
+end:
+    return error;
+}
+
+cx_err_t keychain_address(const keychain_t *k, uint32_t index, char *addr)
+{
+    uint8_t prog[66];
+    cx_err_t error;
+
+    CX_CHECK(keychain_program(k, index, prog));
+    CX_CHECK(!segwit_addr_encode(addr, "ltcmweb", 0, prog, sizeof(prog)));
 end:
     return error;
 }

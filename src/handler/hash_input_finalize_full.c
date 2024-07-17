@@ -27,6 +27,7 @@
 #include "be_operations.h"
 #include "context.h"
 #include "customizable_helpers.h"
+#include "display_variables.h"
 #include "extensions.h"
 #include "helpers.h"
 #include "ui.h"
@@ -540,6 +541,10 @@ unsigned short handler_hash_input_finalize_full(buffer_t *buffer, uint8_t p1,
 
 unsigned char user_action(unsigned char confirming) {
   unsigned short sw = SW_OK;
+
+  if (!memcmp(vars.tmp.fullAddress, "ltcmweb", 7)) {
+    return mweb_sign_output_user_action(confirming);
+  }
 
   // confirm and finish the apdu exchange //spaghetti
 

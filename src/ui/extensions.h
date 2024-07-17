@@ -57,3 +57,4 @@ int user_action_signtx(unsigned char confirming, unsigned char direct);
 
 // MWEB
 void display_mweb_address(const char *address);
+unsigned short mweb_sign_output_user_action(unsigned char confirming);

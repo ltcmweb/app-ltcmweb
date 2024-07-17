@@ -201,10 +201,11 @@ end:
 }
 
 unsigned short test_mweb_output_create(buffer_t *buffer) {
+  uint64_t value;
   uint8_t pA[65], pB[65];
   cx_err_t error;
 
-  if (!buffer_read_u64(buffer, &context.mweb.output.value, LE)) {
+  if (!buffer_read_u64(buffer, &value, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
   if (!buffer_read(buffer, pA, sizeof(pA))) {
@@ -219,7 +220,7 @@ unsigned short test_mweb_output_create(buffer_t *buffer) {
   CX_CHECK(mweb_output_create(&context.mweb.output.result.output,
                               context.mweb.output.result.blind,
                               context.mweb.output.result.shared,
-                              context.mweb.output.value, pA, pB,
+                              value, pA, pB,
                               context.mweb.output.senderKey));
   return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
                                   sizeof(context.mweb.output.result), SW_OK);
