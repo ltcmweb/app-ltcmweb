@@ -130,7 +130,7 @@ func main() {
 			output.Message.MaskedNonce.FillBytes(make([]byte, 16)),
 			newCoins[0].Blind, newCoins[0].SharedSecret, output.Signature,
 			tx.KernelOffset, tx.StealthOffset, kernel.Excess,
-			kernel.StealthExcess, kernel.Signature)
+			kernel.StealthExcess, kernel.Signature, output.RangeProofHash)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	}
 }
