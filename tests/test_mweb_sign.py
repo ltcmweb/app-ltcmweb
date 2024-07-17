@@ -20,7 +20,9 @@ def test_mweb_sign(backend, firmware):
         B = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         recipient = pack('<Q', int(4e8)) + A + B
         kernel_args = pack('<QQII', int(1e8), int(1e8), 1, 0)
-        kernel_pegout = pack('<Q', int(1e8)) + randbytes(40)
+        # ltc1qku4dqstzff0m2fr5wexkx0d8n2au6an9fk2ke3
+        pk_script = '0014b72ad041624a5fb52474764d633da79abbcd7665'
+        kernel_pegout = pack('<Q', int(1e8)) + bytes.fromhex(pk_script)
 
         resp_go = run_go(12, keys + coin + recipient + kernel_args + kernel_pegout)
         range_proof_hash = resp_go[-32:]

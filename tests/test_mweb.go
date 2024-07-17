@@ -107,7 +107,7 @@ func main() {
 		recipient := &mweb.Recipient{}
 		var fee, pegin uint64
 		var pegouts, lockHeight uint32
-		pegout := &wire.TxOut{PkScript: make([]byte, 40)}
+		pegout := &wire.TxOut{PkScript: make([]byte, 22)}
 		read(r, keys.Scan, keys.Spend, coin.Blind, &coin.Value,
 			coin.OutputId, &addressIndex, coin.SharedSecret, &recipient.Value)
 		recipient.Address = &mw.StealthAddress{
