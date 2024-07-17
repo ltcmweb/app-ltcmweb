@@ -71,6 +71,9 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     CX_CHECK(blake3_update(&features, 1));
 
     cx_rng(context.mweb.kernel.offset, sizeof(blinding_factor_t));
+#ifdef TESTING
+    memcpy(context.mweb.kernel.offset, context.mwebKeychain.scan, 32);
+#endif
     CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mweb.kernel.offset));
 
     commitment_t kernelExcess;
@@ -120,6 +123,9 @@ pegouts_done:
     } result;
 
     cx_rng(stealthBlind, sizeof(stealthBlind));
+#ifdef TESTING
+    memcpy(stealthBlind, context.mwebKeychain.scan, 32);
+#endif
     CX_CHECK(sk_sub(result.stealthOffset, context.mwebStealthOffset, stealthBlind));
     memcpy(result.kernelOffset, context.mweb.kernel.offset, sizeof(result.kernelOffset));
 

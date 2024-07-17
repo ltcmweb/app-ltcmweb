@@ -116,7 +116,8 @@ func main() {
 		read(r, &fee, &pegin, &pegouts, &lockHeight, &pegout.Value, pegout.PkScript)
 		coin.CalculateOutputKey(keys.SpendKey(uint32(addressIndex)))
 		tx, newCoins, _ := mweb.NewTransaction([]*mweb.Coin{coin},
-			[]*mweb.Recipient{recipient}, fee, pegin, []*wire.TxOut{pegout}, nil)
+			[]*mweb.Recipient{recipient}, fee, pegin, []*wire.TxOut{pegout},
+			func(b []byte) error { copy(b, keys.Scan[:]); return nil }, nil)
 		var buf bytes.Buffer
 		input := tx.TxBody.Inputs[0]
 		output := tx.TxBody.Outputs[0]

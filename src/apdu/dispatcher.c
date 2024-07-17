@@ -190,6 +190,7 @@ mweb:
     buf.offset = 0;
     return handler_mweb_sign_kernel(&buf, (bool)cmd->p1);
 
+#ifdef TESTING
   case INS_MWEB_TEST:
     PRINTF("MWEB Test\n");
     if (!cmd->data) {
@@ -200,6 +201,7 @@ mweb:
     buf.size = cmd->lc;
     buf.offset = 0;
     return handler_mweb_test(&buf, cmd->p1);
+#endif
 
   default:
     PRINTF("Instruction not supported\n");

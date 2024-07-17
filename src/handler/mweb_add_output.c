@@ -27,6 +27,9 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
   }
 
   cx_rng(context.mweb.output.senderKey, sizeof(secret_key_t));
+#ifdef TESTING
+  memcpy(context.mweb.output.senderKey, context.mwebKeychain.scan, 32);
+#endif
   CX_CHECK(mweb_output_create(&context.mweb.output.result.output,
                               context.mweb.output.result.blind,
                               context.mweb.output.result.shared,

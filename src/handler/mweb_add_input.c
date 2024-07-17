@@ -25,6 +25,9 @@ unsigned short handler_mweb_add_input(buffer_t *buffer) {
   CX_CHECK(keychain_spend_key(&context.mwebKeychain, coin.address_index, key));
   CX_CHECK(calculate_output_key(&coin, key));
   cx_rng(key, sizeof(key));
+#ifdef TESTING
+  memcpy(key, context.mwebKeychain.scan, 32);
+#endif
   CX_CHECK(mweb_input_create(&context.mweb.input.input, &coin, key));
 
   CX_CHECK(new_blind_switch(blind, coin.blind, coin.value));
