@@ -55,6 +55,7 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
     CX_CHECK(!segwit_addr_encode(vars.tmp.fullAddress, "ltcmweb", 0, pA, sizeof(pA)));
     format_sats_amount(COIN_COINID_SHORT, value, vars.tmp.fullAmount);
     context.totalOutputs++;
+    context.mwebConfirmOutput = 1;
     ui_confirm_single_flow();
     return 0;
   }
@@ -65,13 +66,30 @@ end:
 }
 
 unsigned short mweb_add_output_user_action(unsigned char confirming) {
+  unsigned char confirmOutput = context.mwebConfirmOutput;
+  hash_t hash;
+  cx_err_t error = SW_OK;
+
+  context.mwebConfirmOutput = 0;
+
   if (!confirming) {
-    memset(&context.mweb.output, 0, sizeof(context.mweb.output));
-    return io_send_sw(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
+    context.totalOutputs = 0;
+    context.remainingOutputs = 1;
+    memset(&context.mweb, 0, sizeof(context.mweb));
+    memset(context.mwebKernelBlind, 0, sizeof(context.mwebKernelBlind));
+    memset(context.mwebStealthOffset, 0, sizeof(context.mwebStealthOffset));
+
+    CX_CHECK(blake3_update("", 1));
+    CX_CHECK(blake3_final(hash));
+    CX_CHECK(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
   }
 
-  return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
-                                  sizeof(context.mweb.output.result), SW_OK);
+  if (confirmOutput == 1) {
+    return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
+                                    sizeof(context.mweb.output.result), SW_OK);
+  }
+end:
+  return io_send_sw(error);
 }
 
 unsigned short handler_mweb_sign_output(buffer_t *buffer) {

@@ -20,10 +20,10 @@
 #include "cx.h"
 #include "os.h"
 
-unsigned char output_script_is_regular(unsigned char *buffer);
-unsigned char output_script_is_p2sh(unsigned char *buffer);
-unsigned char output_script_is_op_return(unsigned char *buffer);
-unsigned char output_script_is_native_witness(unsigned char *buffer);
-unsigned char output_script_is_mweb_pegin(unsigned char *buffer);
-unsigned char output_script_is_op_create(unsigned char *buffer, size_t size);
-unsigned char output_script_is_op_call(unsigned char *buffer, size_t size);
+unsigned char output_script_is_regular(const unsigned char *buffer);
+unsigned char output_script_is_p2sh(const unsigned char *buffer);
+unsigned char output_script_is_op_return(const unsigned char *buffer);
+unsigned char output_script_is_native_witness(const unsigned char *buffer);
+unsigned char output_script_is_mweb_pegin(const unsigned char *buffer);
+unsigned char output_script_is_op_create(const unsigned char *buffer, size_t size);
+unsigned char output_script_is_op_call(const unsigned char *buffer, size_t size);

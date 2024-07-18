@@ -38,7 +38,7 @@
  *   - out_size: Size of the output buffer.
  *
  */
-WEAK void get_address_from_output_script(unsigned char *script, int script_size,
+WEAK void get_address_from_output_script(const unsigned char *script, int script_size,
                                          char *out, int out_size) {
   if (output_script_is_op_return(script)) {
     strncpy(out, "OP_RETURN", out_size);

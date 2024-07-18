@@ -18,7 +18,7 @@
 #include "macros.h"
 #include "os.h"
 
-void get_address_from_output_script(unsigned char *script, int script_size,
+void get_address_from_output_script(const unsigned char *script, int script_size,
                                     char *out, int out_size);
 
 uint8_t prepare_fees(void);

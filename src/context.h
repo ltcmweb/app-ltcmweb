@@ -191,6 +191,7 @@ struct context_s {
   } mweb;
   blinding_factor_t mwebKernelBlind;
   blinding_factor_t mwebStealthOffset;
+  unsigned char mwebConfirmOutput;
   keychain_t mwebKeychain;
 
   /** Size currently available to the transaction parser */

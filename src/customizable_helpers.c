@@ -70,7 +70,7 @@ const unsigned char ZEN_OUTPUT_SCRIPT_POST[] = {
  *   - 1 if the output script is regular
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_regular(unsigned char *buffer) {
+WEAK unsigned char output_script_is_regular(const unsigned char *buffer) {
   if (COIN_NATIVE_SEGWIT_PREFIX) {
     if ((memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE,
                 sizeof(TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE)) == 0) ||
@@ -110,7 +110,7 @@ WEAK unsigned char output_script_is_regular(unsigned char *buffer) {
  *   - 1 if the output script is a P2SH script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_p2sh(unsigned char *buffer) {
+WEAK unsigned char output_script_is_p2sh(const unsigned char *buffer) {
   if ((memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE,
               sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE)) == 0) &&
       (memcmp(buffer + sizeof(TRANSACTION_OUTPUT_SCRIPT_P2SH_PRE) + 20,
@@ -143,7 +143,7 @@ WEAK unsigned char output_script_is_p2sh(unsigned char *buffer) {
  *   - 1 if the output script is a native witness script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_native_witness(unsigned char *buffer) {
+WEAK unsigned char output_script_is_native_witness(const unsigned char *buffer) {
   if (COIN_NATIVE_SEGWIT_PREFIX) {
     if ((memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE,
                 sizeof(TRANSACTION_OUTPUT_SCRIPT_P2WPKH_PRE)) == 0) ||
@@ -168,7 +168,7 @@ WEAK unsigned char output_script_is_native_witness(unsigned char *buffer) {
  *   - 0 otherwise.
  *
  */
-WEAK unsigned char output_script_is_op_return(unsigned char *buffer) {
+WEAK unsigned char output_script_is_op_return(const unsigned char *buffer) {
   if (COIN_KIND == COIN_KIND_BITCOIN_CASH) {
     return ((buffer[1] == 0x6A) ||
             ((buffer[1] == 0x00) && (buffer[2] == 0x6A)));
@@ -189,7 +189,7 @@ WEAK unsigned char output_script_is_op_return(unsigned char *buffer) {
  *   - 1 if the output script is an MWEB peg-in script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_mweb_pegin(unsigned char *buffer) {
+WEAK unsigned char output_script_is_mweb_pegin(const unsigned char *buffer) {
   if (memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE,
              sizeof(TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE)) == 0) {
     return 1;
@@ -211,7 +211,7 @@ WEAK unsigned char output_script_is_mweb_pegin(unsigned char *buffer) {
  *   - 1 if the output script is an OP_CREATE or OP_CALL script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_op_create_or_call(unsigned char *buffer,
+WEAK unsigned char output_script_is_op_create_or_call(const unsigned char *buffer,
                                                       size_t size,
                                                       unsigned char value) {
   return (!output_script_is_regular(buffer) && !output_script_is_p2sh(buffer) &&
@@ -232,7 +232,7 @@ WEAK unsigned char output_script_is_op_create_or_call(unsigned char *buffer,
  *   - 1 if the output script is an OP_CREATE script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_op_create(unsigned char *buffer,
+WEAK unsigned char output_script_is_op_create(const unsigned char *buffer,
                                               size_t size) {
   return output_script_is_op_create_or_call(buffer, size, 0xC1);
 }
@@ -250,7 +250,7 @@ WEAK unsigned char output_script_is_op_create(unsigned char *buffer,
  *   - 1 if the output script is an OP_CALL script.
  *   - 0 otherwise.
  */
-WEAK unsigned char output_script_is_op_call(unsigned char *buffer,
+WEAK unsigned char output_script_is_op_call(const unsigned char *buffer,
                                             size_t size) {
   return output_script_is_op_create_or_call(buffer, size, 0xC2);
 }

@@ -9,8 +9,12 @@
 
 #include "apdu_constants.h"
 #include "context.h"
+#include "customizable_ui.h"
+#include "display_utils.h"
+#include "display_variables.h"
 #include "extensions.h"
 #include "io.h"
+#include "ui.h"
 
 #include "../mweb/kernel.h"
 
@@ -88,31 +92,37 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     }
     if (context.mweb.kernel.pegouts) {
       CX_CHECK(blake3_update(&context.mweb.kernel.pegouts, 1));
-      return io_send_sw(SW_OK);
     }
-    goto pegouts_done;
 
-  } else {
+    return io_send_sw(SW_OK);
+
+  } else if (context.mweb.kernel.pegouts) {
     uint64_t value;
     uint8_t scriptLen = buffer->size - 8;
 
     if (!buffer_read_u64(buffer, &value, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
+    if (!scriptLen) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+
+    context.mweb.kernel.pegouts--;
 
     CX_CHECK(hash_varint(value));
     CX_CHECK(blake3_update(&scriptLen, 1));
     CX_CHECK(blake3_update(buffer->ptr + 8, scriptLen));
 
-    if (--context.mweb.kernel.pegouts) {
-      return io_send_sw(SW_OK);
-    }
+    get_address_from_output_script(buffer->ptr + 8, scriptLen,
+                                   vars.tmp.fullAddress, sizeof(vars.tmp.fullAddress));
+    format_sats_amount(COIN_COINID_SHORT, value, vars.tmp.fullAmount);
 
-pegouts_done:
-    if (context.mweb.kernel.lockHeight) {
-      CX_CHECK(hash_varint(context.mweb.kernel.lockHeight));
-    }
+    context.totalOutputs++;
+    context.mwebConfirmOutput = 2;
+    ui_confirm_single_flow();
+    return 0;
 
+  } else {
     blinding_factor_t stealthBlind;
     struct {
       blinding_factor_t kernelOffset;
@@ -121,6 +131,10 @@ pegouts_done:
       public_key_t stealthExcess;
       signature_t sig;
     } result;
+
+    if (context.mweb.kernel.lockHeight) {
+      CX_CHECK(hash_varint(context.mweb.kernel.lockHeight));
+    }
 
     cx_rng(stealthBlind, sizeof(stealthBlind));
 #ifdef TESTING

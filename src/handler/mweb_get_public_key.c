@@ -30,8 +30,9 @@ unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display) {
 
   context.totalOutputs = 0;
   context.remainingOutputs = 1;
-  memset(context.mwebKernelBlind, 0, sizeof(blinding_factor_t));
-  memset(context.mwebStealthOffset, 0, sizeof(blinding_factor_t));
+  memset(&context.mweb, 0, sizeof(context.mweb));
+  memset(context.mwebKernelBlind, 0, sizeof(context.mwebKernelBlind));
+  memset(context.mwebStealthOffset, 0, sizeof(context.mwebStealthOffset));
 
   if (display) {
     uint32_t address_index;
