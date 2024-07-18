@@ -98,22 +98,24 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
 
   } else if (context.mweb.kernel.pegouts) {
     uint64_t value;
-    uint8_t scriptLen = buffer->size - 8;
+    uint8_t scriptLen;
 
     if (!buffer_read_u64(buffer, &value, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
-    if (!scriptLen) {
+    if (!buffer_read_u8(buffer, &scriptLen)) {
+      return io_send_sw(SW_INCORRECT_LENGTH);
+    }
+    if (!buffer_can_read(buffer, scriptLen)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
     context.mweb.kernel.pegouts--;
 
     CX_CHECK(hash_varint(value));
-    CX_CHECK(blake3_update(&scriptLen, 1));
-    CX_CHECK(blake3_update(buffer->ptr + 8, scriptLen));
+    CX_CHECK(blake3_update(buffer->ptr + buffer->offset - 1, scriptLen + 1));
 
-    get_address_from_output_script(buffer->ptr + 8, scriptLen,
+    get_address_from_output_script(buffer->ptr + buffer->offset - 1, scriptLen + 1,
                                    vars.tmp.fullAddress, sizeof(vars.tmp.fullAddress));
     format_sats_amount(COIN_COINID_SHORT, value, vars.tmp.fullAmount);
 

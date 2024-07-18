@@ -21,8 +21,8 @@ def test_mweb_sign(backend, firmware):
         recipient = pack('<Q', int(4e8)) + A + B
         kernel_args = pack('<QQII', int(1e8), int(1e8), 1, 0)
         # ltc1qku4dqstzff0m2fr5wexkx0d8n2au6an9fk2ke3
-        pk_script = '0014b72ad041624a5fb52474764d633da79abbcd7665'
-        kernel_pegout = pack('<Q', int(1e8)) + bytes.fromhex(pk_script)
+        pk_script = bytes.fromhex('0014b72ad041624a5fb52474764d633da79abbcd7665')
+        kernel_pegout = pack('<QB', int(1e8), len(pk_script)) + pk_script
 
         resp_go = run_go(12, keys + coin + recipient + kernel_args + kernel_pegout)
         range_proof_hash = resp_go[-32:]
@@ -31,6 +31,7 @@ def test_mweb_sign(backend, firmware):
         output = backend.exchange(0xeb, 0x08, 0x00, 0x00, recipient).data
         output_sig = backend.exchange(0xeb, 0x09, 0x00, 0x00, range_proof_hash).data
         backend.exchange(0xeb, 0x0a, 0x01, 0x00, kernel_args)
-        kernel = backend.exchange(0xeb, 0x0a, 0x00, 0x00, kernel_pegout).data
+        backend.exchange(0xeb, 0x0a, 0x00, 0x00, kernel_pegout)
+        kernel = backend.exchange(0xeb, 0x0a, 0x00, 0x00, b'0').data
 
         assert resp_go == input + output + output_sig + kernel + range_proof_hash

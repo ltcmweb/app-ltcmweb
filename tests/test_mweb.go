@@ -107,13 +107,16 @@ func main() {
 		recipient := &mweb.Recipient{}
 		var fee, pegin uint64
 		var pegouts, lockHeight uint32
-		pegout := &wire.TxOut{PkScript: make([]byte, 22)}
+		pegout := &wire.TxOut{}
+		var scriptLen byte
 		read(r, keys.Scan, keys.Spend, coin.Blind, &coin.Value,
 			coin.OutputId, &addressIndex, coin.SharedSecret, &recipient.Value)
 		recipient.Address = &mw.StealthAddress{
 			Scan: readPubkey(r), Spend: readPubkey(r),
 		}
-		read(r, &fee, &pegin, &pegouts, &lockHeight, &pegout.Value, pegout.PkScript)
+		read(r, &fee, &pegin, &pegouts, &lockHeight, &pegout.Value, &scriptLen)
+		pegout.PkScript = make([]byte, scriptLen)
+		read(r, pegout.PkScript)
 		coin.CalculateOutputKey(keys.SpendKey(uint32(addressIndex)))
 		tx, newCoins, _ := mweb.NewTransaction([]*mweb.Coin{coin},
 			[]*mweb.Recipient{recipient}, fee, pegin, []*wire.TxOut{pegout},
