@@ -84,9 +84,17 @@ unsigned short mweb_add_output_user_action(unsigned char confirming) {
     CX_CHECK(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
   }
 
-  if (confirmOutput == 1) {
+  switch (confirmOutput) {
+  case 1:
     return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
                                     sizeof(context.mweb.output.result), SW_OK);
+  case 2:
+    if (!context.mweb.kernel.pegouts) {
+      format_sats_amount(COIN_COINID_SHORT, context.mweb.kernel.fee, vars.tmp.feesAmount);
+      context.mwebConfirmOutput = 3;
+      ui_finalize_flow();
+      return 1;
+    }
   }
 end:
   return io_send_sw(error);
