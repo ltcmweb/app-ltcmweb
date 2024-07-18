@@ -89,7 +89,7 @@ unsigned short mweb_add_output_user_action(unsigned char confirming) {
     return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
                                     sizeof(context.mweb.output.result), SW_OK);
   case 2:
-    if (!context.mweb.kernel.pegouts) {
+    if (!context.mweb.kernel.pegoutsRemaining) {
       format_sats_amount(COIN_COINID_SHORT, context.mweb.kernel.fee, vars.tmp.feesAmount);
       context.mwebConfirmOutput = 3;
       ui_finalize_flow();

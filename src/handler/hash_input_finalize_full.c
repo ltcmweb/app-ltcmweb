@@ -66,7 +66,7 @@ static int check_output_displayable(bool *displayable) {
   isOpReturn = output_script_is_op_return(context.currentOutput + 8);
   isP2sh = output_script_is_p2sh(context.currentOutput + 8);
   isNativeSegwit = output_script_is_native_witness(context.currentOutput + 8);
-  isMwebPegin = output_script_is_mweb_pegin(context.currentOutput + 8);
+  isMwebPegin = output_script_is_mweb_pegin(context.currentOutput);
 #ifndef __clang_analyzer__
   unsigned char isOpCreate = output_script_is_op_create(
       context.currentOutput + 8, sizeof(context.currentOutput) - 8);
@@ -82,7 +82,9 @@ static int check_output_displayable(bool *displayable) {
     return -1;
   }
 #endif
-  if (context.tmpCtx.output.changeInitialized && !isOpReturn && !isMwebPegin) {
+  if (isMwebPegin) {
+    *displayable = false;
+  } else if (context.tmpCtx.output.changeInitialized && !isOpReturn) {
     bool changeFound = false;
     unsigned char addressOffset =
         (isNativeSegwit ? OUTPUT_SCRIPT_NATIVE_WITNESS_PROGRAM_OFFSET

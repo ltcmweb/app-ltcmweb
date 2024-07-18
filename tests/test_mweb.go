@@ -106,7 +106,8 @@ func main() {
 		var addressIndex uint64
 		recipient := &mweb.Recipient{}
 		var fee, pegin uint64
-		var pegouts, lockHeight uint32
+		var pegouts uint16
+		var lockHeight uint32
 		pegout := &wire.TxOut{}
 		var scriptLen byte
 		read(r, keys.Scan, keys.Spend, coin.Blind, &coin.Value,

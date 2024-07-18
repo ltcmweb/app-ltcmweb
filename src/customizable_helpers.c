@@ -190,11 +190,16 @@ WEAK unsigned char output_script_is_op_return(const unsigned char *buffer) {
  *   - 0 otherwise.
  */
 WEAK unsigned char output_script_is_mweb_pegin(const unsigned char *buffer) {
-  if (memcmp(buffer, TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE,
-             sizeof(TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE)) == 0) {
-    return 1;
+  if (memcmp(buffer, &context.mweb.kernel.pegin, sizeof(uint64_t))) {
+    return 0;
   }
-  return 0;
+  if (memcmp(buffer + 8, TRANSACTION_OUTPUT_SCRIPT_MWEB_PEGIN_PRE, 3)) {
+    return 0;
+  }
+  if (memcmp(buffer + 11, context.mweb.kernel.hash, sizeof(hash_t))) {
+    return 0;
+  }
+  return 1;
 }
 
 /*

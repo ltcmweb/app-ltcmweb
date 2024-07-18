@@ -51,7 +51,6 @@ end:
 }
 
 unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
-  uint8_t features = STEALTH_EXCESS_FEATURE_BIT;
   cx_err_t error;
 
   if (start) {
@@ -61,18 +60,19 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     if (!buffer_read_u64(buffer, &context.mweb.kernel.pegin, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
-    if (!buffer_read_u32(buffer, &context.mweb.kernel.pegouts, LE)) {
+    if (!buffer_read_u16(buffer, &context.mweb.kernel.pegouts, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
     if (!buffer_read_u32(buffer, &context.mweb.kernel.lockHeight, LE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
-    if (context.mweb.kernel.fee) features |= FEE_FEATURE_BIT;
-    if (context.mweb.kernel.pegin) features |= PEGIN_FEATURE_BIT;
-    if (context.mweb.kernel.pegouts) features |= PEGOUT_FEATURE_BIT;
-    if (context.mweb.kernel.lockHeight) features |= HEIGHT_LOCK_FEATURE_BIT;
-    CX_CHECK(blake3_update(&features, 1));
+    context.mweb.kernel.features = STEALTH_EXCESS_FEATURE_BIT;
+    if (context.mweb.kernel.fee) context.mweb.kernel.features |= FEE_FEATURE_BIT;
+    if (context.mweb.kernel.pegin) context.mweb.kernel.features |= PEGIN_FEATURE_BIT;
+    if (context.mweb.kernel.pegouts) context.mweb.kernel.features |= PEGOUT_FEATURE_BIT;
+    if (context.mweb.kernel.lockHeight) context.mweb.kernel.features |= HEIGHT_LOCK_FEATURE_BIT;
+    CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
 
     cx_rng(context.mweb.kernel.offset, sizeof(blinding_factor_t));
 #ifdef TESTING
@@ -94,9 +94,11 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
       CX_CHECK(blake3_update(&context.mweb.kernel.pegouts, 1));
     }
 
+    context.mweb.kernel.pegoutsRemaining = context.mweb.kernel.pegouts;
+
     return io_send_sw(SW_OK);
 
-  } else if (context.mweb.kernel.pegouts) {
+  } else if (context.mweb.kernel.pegoutsRemaining) {
     uint64_t value;
     uint8_t scriptLen;
 
@@ -110,7 +112,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
 
-    context.mweb.kernel.pegouts--;
+    context.mweb.kernel.pegoutsRemaining--;
 
     CX_CHECK(hash_varint(value));
     CX_CHECK(blake3_update(buffer->ptr + buffer->offset - 1, scriptLen + 1));
@@ -147,6 +149,25 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
 
     CX_CHECK(new_commit(result.kernelExcess, NULL, context.mwebKernelBlind, 0));
     CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind, result.stealthExcess, result.sig));
+
+    CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
+    if (context.mweb.kernel.fee) {
+      CX_CHECK(hash_varint(context.mweb.kernel.fee));
+    }
+    if (context.mweb.kernel.pegin) {
+      CX_CHECK(hash_varint(context.mweb.kernel.pegin));
+    }
+    if (context.mweb.kernel.lockHeight) {
+      CX_CHECK(hash_varint(context.mweb.kernel.lockHeight));
+    }
+    CX_CHECK(blake3_update(result.stealthExcess, sizeof(result.stealthExcess)));
+    CX_CHECK(blake3_update(result.kernelExcess, sizeof(result.kernelExcess)));
+    CX_CHECK(blake3_update(result.sig, sizeof(result.sig)));
+    CX_CHECK(blake3_final(context.mweb.kernel.hash));
+
+    if (context.mweb.kernel.pegouts) {
+      cx_rng(context.mweb.kernel.hash, sizeof(hash_t));
+    }
 
     return io_send_response_pointer((uint8_t*)&result, sizeof(result), SW_OK);
   }

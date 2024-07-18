@@ -25,7 +25,7 @@ def test_mweb_sign(backend, firmware, navigator):
         A = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         B = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
         recipient = pack('<Q', int(4e8)) + A + B
-        kernel_args = pack('<QQII', int(1e8), int(1e8), 1, 0)
+        kernel_args = pack('<QQHI', int(1e8), int(1e8), 1, 0)
         # ltc1qku4dqstzff0m2fr5wexkx0d8n2au6an9fk2ke3
         pk_script = bytes.fromhex('0014b72ad041624a5fb52474764d633da79abbcd7665')
         kernel_pegout = pack('<QB', int(1e8), len(pk_script)) + pk_script

@@ -149,9 +149,12 @@ struct mweb_output_context_s {
 struct mweb_kernel_context_s {
   uint64_t fee;
   uint64_t pegin;
-  uint32_t pegouts;
+  uint16_t pegouts;
+  uint16_t pegoutsRemaining;
   uint32_t lockHeight;
+  uint8_t features;
   blinding_factor_t offset;
+  hash_t hash;
 };
 
 struct context_s {
