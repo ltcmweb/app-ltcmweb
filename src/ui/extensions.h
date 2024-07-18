@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "../mweb/coin.h"
-
 // btchip asking the per-output UI
 unsigned int confirm_single_output(void);
 

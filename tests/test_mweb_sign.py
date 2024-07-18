@@ -1,4 +1,5 @@
 from ecdsa import SigningKey, SECP256k1
+from ragger.navigator.instruction import NavInsID
 from random import randbytes
 from struct import pack
 import subprocess
@@ -8,8 +9,13 @@ def run_go(op, data):
     result = subprocess.run(args, capture_output=True)
     return bytes.fromhex(result.stdout.decode())
 
-def test_mweb_sign(backend, firmware):
-    for _ in range(100):
+def nav(navigator, text, click=False):
+    instructions = [NavInsID.BOTH_CLICK] if click else None
+    navigator.navigate_until_text(NavInsID.RIGHT_CLICK, instructions, text,
+                                  screen_change_before_first_instruction=False)
+
+def test_mweb_sign(backend, firmware, navigator):
+    for _ in range(10):
         data = pack('>BIII', 3, 1000 | 1<<31, 2 | 1<<31, 0 | 1<<31)
         backend.exchange(0xeb, 0x05, 0x00, 0x00, data)
         keys = randbytes(64)
@@ -26,12 +32,22 @@ def test_mweb_sign(backend, firmware):
 
         resp_go = run_go(12, keys + coin + recipient + kernel_args + kernel_pegout)
         range_proof_hash = resp_go[-32:]
+        recipient_addr = run_go(13, A + B).decode()
 
         input = backend.exchange(0xeb, 0x07, 0x00, 0x00, coin).data
-        output = backend.exchange(0xeb, 0x08, 0x00, 0x00, recipient).data
+        with backend.exchange_async(0xeb, 0x08, 0x00, 0x00, recipient):
+            nav(navigator, 'LTC 4')
+            nav(navigator, recipient_addr[:15])
+            nav(navigator, 'Accept', True)
+        output = backend.last_async_response.data
         output_sig = backend.exchange(0xeb, 0x09, 0x00, 0x00, range_proof_hash).data
         backend.exchange(0xeb, 0x0a, 0x01, 0x00, kernel_args)
-        backend.exchange(0xeb, 0x0a, 0x00, 0x00, kernel_pegout)
+        with backend.exchange_async(0xeb, 0x0a, 0x00, 0x00, kernel_pegout):
+            nav(navigator, 'LTC 1')
+            nav(navigator, 'ltc1qku4dqstzff0m2f')
+            nav(navigator, 'Accept', True)
+            nav(navigator, 'LTC 1')
+            nav(navigator, 'Accept', True)
         kernel = backend.exchange(0xeb, 0x0a, 0x00, 0x00, b'0').data
 
         assert resp_go == input + output + output_sig + kernel + range_proof_hash
