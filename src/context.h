@@ -139,7 +139,6 @@ struct mweb_input_context_s {
 
 struct mweb_output_context_s {
   secret_key_t senderKey;
-  hash_t rangeProofHash;
   struct {
     mweb_output_t output;
     blinding_factor_t blind;

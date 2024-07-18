@@ -50,44 +50,41 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
   pA[0] = pA[64] % 2 ? 3 : 2;
   compress_pubkey(pA + 33, pB);
   CX_CHECK(keychain_program(&context.mwebKeychain, 0, pB));
-  vars.tmp.fullAddress[0] = 0;
 
   if (memcmp(pA, pB, sizeof(pA))) {
     CX_CHECK(!segwit_addr_encode(vars.tmp.fullAddress, "ltcmweb", 0, pA, sizeof(pA)));
     format_sats_amount(COIN_COINID_SHORT, value, vars.tmp.fullAmount);
     context.totalOutputs++;
-  }
-
-  return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
-                                  sizeof(context.mweb.output.result), SW_OK);
-end:
-  return io_send_sw(error);
-}
-
-unsigned short handler_mweb_sign_output(buffer_t *buffer) {
-  if (!buffer_read(buffer, context.mweb.output.rangeProofHash, sizeof(hash_t))) {
-    return io_send_sw(SW_INCORRECT_LENGTH);
-  }
-
-  if (vars.tmp.fullAddress[0]) {
     ui_confirm_single_flow();
     return 0;
   }
 
-  return mweb_sign_output_user_action(1);
+  return mweb_add_output_user_action(1);
+end:
+  return io_send_sw(error);
 }
 
-unsigned short mweb_sign_output_user_action(unsigned char confirming) {
-  signature_t sig;
-  cx_err_t error;
-
+unsigned short mweb_add_output_user_action(unsigned char confirming) {
   if (!confirming) {
+    memset(&context.mweb.output, 0, sizeof(context.mweb.output));
     return io_send_sw(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
   }
 
+  return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
+                                  sizeof(context.mweb.output.result), SW_OK);
+}
+
+unsigned short handler_mweb_sign_output(buffer_t *buffer) {
+  hash_t rangeProofHash;
+  signature_t sig;
+  cx_err_t error;
+
+  if (!buffer_read(buffer, rangeProofHash, sizeof(rangeProofHash))) {
+    return io_send_sw(SW_INCORRECT_LENGTH);
+  }
+
   CX_CHECK(mweb_output_sign(sig, &context.mweb.output.result.output,
-                            context.mweb.output.rangeProofHash,
-                            context.mweb.output.senderKey));
+                            rangeProofHash, context.mweb.output.senderKey));
 
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:
