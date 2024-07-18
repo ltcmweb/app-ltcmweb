@@ -199,7 +199,7 @@ WEAK unsigned char output_script_is_mweb_pegin(const unsigned char *buffer) {
   if (memcmp(buffer + 11, context.mweb.kernel.hash, sizeof(hash_t))) {
     return 0;
   }
-  return 1;
+  return context.mwebKernelHashValid;
 }
 
 /*

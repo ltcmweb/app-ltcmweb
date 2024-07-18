@@ -23,6 +23,7 @@
 #include "ledger_assert.h"
 
 #include "apdu_constants.h"
+#include "context.h"
 #include "dispatcher.h"
 
 int apdu_dispatcher(const command_t *cmd) {
@@ -134,6 +135,8 @@ int apdu_dispatcher(const command_t *cmd) {
   }
 
 mweb:
+  context.mwebKernelHashValid = 0;
+
   switch (cmd->ins) {
   case INS_MWEB_GET_PUBLIC_KEY:
     PRINTF("MWEB Get public key\n");

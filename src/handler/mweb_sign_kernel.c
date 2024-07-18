@@ -164,10 +164,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     CX_CHECK(blake3_update(result.kernelExcess, sizeof(result.kernelExcess)));
     CX_CHECK(blake3_update(result.sig, sizeof(result.sig)));
     CX_CHECK(blake3_final(context.mweb.kernel.hash));
-
-    if (context.mweb.kernel.pegouts) {
-      cx_rng(context.mweb.kernel.hash, sizeof(hash_t));
-    }
+    context.mwebKernelHashValid = !context.mweb.kernel.pegouts;
 
     return io_send_response_pointer((uint8_t*)&result, sizeof(result), SW_OK);
   }
