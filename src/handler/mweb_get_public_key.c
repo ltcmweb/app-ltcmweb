@@ -11,7 +11,9 @@
 
 #include "apdu_constants.h"
 #include "context.h"
+#include "display_variables.h"
 #include "extensions.h"
+#include "ui.h"
 
 unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display) {
   uint32_t bip32_path[MAX_BIP32_PATH];
@@ -35,14 +37,13 @@ unsigned short handler_mweb_get_public_key(buffer_t *buffer, bool display) {
   memset(context.mwebStealthOffset, 0, sizeof(context.mwebStealthOffset));
 
   if (display) {
-    uint32_t address_index;
-    char address[130];
+    uint32_t index;
 
-    if (!buffer_read_u32(buffer, &address_index, BE)) {
+    if (!buffer_read_u32(buffer, &index, BE)) {
       return io_send_sw(SW_INCORRECT_LENGTH);
     }
-    CX_CHECK(keychain_address(&context.mwebKeychain, address_index, address));
-    display_mweb_address(address);
+    CX_CHECK(keychain_address(&context.mwebKeychain, index, vars.tmp.fullAddress));
+    ui_display_address_flow();
     return 0;
   }
 

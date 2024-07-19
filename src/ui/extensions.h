@@ -54,5 +54,4 @@ void request_sign_path_approval(unsigned char *change_path);
 int user_action_signtx(unsigned char confirming, unsigned char direct);
 
 // MWEB
-void display_mweb_address(const char *address);
 unsigned short mweb_add_output_user_action(unsigned char confirming);
