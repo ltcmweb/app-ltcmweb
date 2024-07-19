@@ -154,6 +154,8 @@ struct mweb_kernel_context_s {
   uint32_t lockHeight;
   uint8_t features;
   blinding_factor_t offset;
+  commitment_t excess;
+  public_key_t excessPubkey;
   hash_t hash;
 };
 

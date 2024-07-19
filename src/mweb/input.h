@@ -13,4 +13,6 @@ typedef struct {
     signature_t sig;
 } mweb_input_t;
 
-cx_err_t mweb_input_create(mweb_input_t *input, const coin_t *coin, const secret_key_t input_key);
+cx_err_t mweb_input_create(
+    mweb_input_t *input, blinding_factor_t blind,
+    const coin_t *coin, const secret_key_t input_key);

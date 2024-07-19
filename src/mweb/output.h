@@ -20,7 +20,8 @@ typedef struct {
 
 cx_err_t mweb_output_create(mweb_output_t *output,
     blinding_factor_t blind, secret_key_t shared,
-    uint64_t value, const uint8_t *pA, const uint8_t *pB,
+    blinding_factor_t blind_switch, uint64_t value,
+    const uint8_t *pA, const uint8_t *pB,
     const secret_key_t sender_key);
 cx_err_t mweb_output_sign(signature_t sig, const mweb_output_t *output,
     const hash_t range_proof_hash, const secret_key_t sender_key);

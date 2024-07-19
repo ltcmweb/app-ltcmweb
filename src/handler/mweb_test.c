@@ -45,6 +45,7 @@ end:
 unsigned short test_mweb_input_create(buffer_t *buffer) {
   coin_t coin;
   secret_key_t input_key;
+  blinding_factor_t blind;
   cx_err_t error;
 
   if (!buffer_read(buffer, coin.blind, sizeof(coin.blind))) {
@@ -62,7 +63,7 @@ unsigned short test_mweb_input_create(buffer_t *buffer) {
   if (!buffer_read(buffer, input_key, sizeof(input_key))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(mweb_input_create(&context.mweb.input.input, &coin, input_key));
+  CX_CHECK(mweb_input_create(&context.mweb.input.input, blind, &coin, input_key));
   return io_send_response_pointer((uint8_t*)&context.mweb.input.input, sizeof(mweb_input_t), SW_OK);
 end:
   return io_send_sw(error);
@@ -143,7 +144,7 @@ end:
 unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   blinding_factor_t kernel_blind, stealth_blind;
   commitment_t kernel_excess;
-  public_key_t stealth_excess;
+  public_key_t kernel_excess_pubkey, stealth_excess;
   signature_t sig;
   cx_err_t error;
 
@@ -153,10 +154,11 @@ unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
   if (!buffer_read(buffer, stealth_blind, sizeof(stealth_blind))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(new_commit(kernel_excess, NULL, kernel_blind, 0));
+  CX_CHECK(new_commit(kernel_excess, kernel_excess_pubkey, kernel_blind, 0));
   CX_CHECK(blake3_update("\x10", 1));
   CX_CHECK(blake3_update(kernel_excess, sizeof(kernel_excess)));
-  CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind, stealth_excess, sig));
+  CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind,
+                            kernel_excess_pubkey, stealth_excess, sig));
   return io_send_response_pointer(sig, sizeof(sig), SW_OK);
 end:
   return io_send_sw(error);
@@ -203,6 +205,7 @@ end:
 unsigned short test_mweb_output_create(buffer_t *buffer) {
   uint64_t value;
   uint8_t pA[65], pB[65];
+  blinding_factor_t blind;
   cx_err_t error;
 
   if (!buffer_read_u64(buffer, &value, LE)) {
@@ -220,7 +223,7 @@ unsigned short test_mweb_output_create(buffer_t *buffer) {
   CX_CHECK(mweb_output_create(&context.mweb.output.result.output,
                               context.mweb.output.result.blind,
                               context.mweb.output.result.shared,
-                              value, pA, pB,
+                              blind, value, pA, pB,
                               context.mweb.output.senderKey));
   return io_send_response_pointer((uint8_t*)&context.mweb.output.result,
                                   sizeof(context.mweb.output.result), SW_OK);

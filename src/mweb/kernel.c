@@ -4,16 +4,14 @@
 cx_err_t sign_mweb_kernel(
     const blinding_factor_t kernel_blind,
     const blinding_factor_t stealth_blind,
+    const public_key_t kernel_excess_pubkey,
     public_key_t stealth_excess_pubkey,
     signature_t sig)
 {
-    commitment_t kernel_excess;
-    public_key_t kernel_excess_pubkey;
     secret_key_t key;
     hash_t hash;
     cx_err_t error;
 
-    CX_CHECK(new_commit(kernel_excess, kernel_excess_pubkey, kernel_blind, 0));
     CX_CHECK(sk_pub(stealth_excess_pubkey, stealth_blind));
 
     CX_CHECK(blake3_update(stealth_excess_pubkey, sizeof(public_key_t)));

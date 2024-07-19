@@ -80,9 +80,10 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
 #endif
     CX_CHECK(sk_sub(context.mwebKernelBlind, context.mwebKernelBlind, context.mweb.kernel.offset));
 
-    commitment_t kernelExcess;
-    CX_CHECK(new_commit(kernelExcess, NULL, context.mwebKernelBlind, 0));
-    CX_CHECK(blake3_update(kernelExcess, sizeof(kernelExcess)));
+    CX_CHECK(new_commit(context.mweb.kernel.excess,
+                        context.mweb.kernel.excessPubkey,
+                        context.mwebKernelBlind, 0));
+    CX_CHECK(blake3_update(context.mweb.kernel.excess, sizeof(commitment_t)));
 
     if (context.mweb.kernel.fee) {
       CX_CHECK(hash_varint(context.mweb.kernel.fee));
@@ -150,11 +151,14 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     memcpy(stealthBlind, context.mwebKeychain.scan, 32);
 #endif
     CX_CHECK(sk_sub(result.stealthOffset, context.mwebStealthOffset, stealthBlind));
-    memcpy(result.kernelOffset, context.mweb.kernel.offset, sizeof(result.kernelOffset));
-    result.features = context.mweb.kernel.features;
 
-    CX_CHECK(new_commit(result.kernelExcess, NULL, context.mwebKernelBlind, 0));
-    CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind, result.stealthExcess, result.sig));
+    result.features = context.mweb.kernel.features;
+    memcpy(result.kernelOffset, context.mweb.kernel.offset, sizeof(result.kernelOffset));
+    memcpy(result.kernelExcess, context.mweb.kernel.excess, sizeof(result.kernelExcess));
+
+    CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind,
+                              context.mweb.kernel.excessPubkey,
+                              result.stealthExcess, result.sig));
 
     CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
     if (context.mweb.kernel.fee) {

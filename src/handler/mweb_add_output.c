@@ -40,10 +40,9 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
   CX_CHECK(mweb_output_create(&context.mweb.output.result.output,
                               context.mweb.output.result.blind,
                               context.mweb.output.result.shared,
-                              value, pA, pB,
+                              blind, value, pA, pB,
                               context.mweb.output.senderKey));
 
-  CX_CHECK(new_blind_switch(blind, context.mweb.output.result.blind, value));
   CX_CHECK(sk_add(context.mwebKernelBlind, context.mwebKernelBlind, blind));
   CX_CHECK(sk_add(context.mwebStealthOffset, context.mweb.output.senderKey, context.mwebStealthOffset));
 

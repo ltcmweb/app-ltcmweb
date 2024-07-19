@@ -4,14 +4,14 @@
 
 cx_err_t mweb_output_create(mweb_output_t *output,
     blinding_factor_t blind, secret_key_t t,
-    uint64_t v, const uint8_t *pA, const uint8_t *pB,
+    blinding_factor_t blind_switch, uint64_t v,
+    const uint8_t *pA, const uint8_t *pB,
     const secret_key_t sender_key)
 {
     public_key_t A, B, sA;
     hash_t n, h;
     secret_key_t s;
     uint8_t pt[65];
-    blinding_factor_t blind_switch;
     cx_err_t error;
 
     compress_pubkey(A, pA);

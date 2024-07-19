@@ -2,9 +2,10 @@
 
 #define MWEB_INPUT_STEALTH_KEY_FEATURE_BIT 1
 
-cx_err_t mweb_input_create(mweb_input_t *input, const coin_t *coin, const secret_key_t input_key)
+cx_err_t mweb_input_create(
+    mweb_input_t *input, blinding_factor_t blind,
+    const coin_t *coin, const secret_key_t input_key)
 {
-    blinding_factor_t blind;
     hash_t key_hash, msg_hash;
     secret_key_t sig_key;
     cx_err_t error;
