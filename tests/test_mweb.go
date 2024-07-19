@@ -106,21 +106,26 @@ func main() {
 		var addressIndex uint64
 		recipient := &mweb.Recipient{}
 		var fee, pegin uint64
-		var pegouts uint16
+		var nPegouts uint16
 		var lockHeight uint32
-		pegout := &wire.TxOut{}
-		var scriptLen byte
+		var pegouts []*wire.TxOut
 		read(r, keys.Scan, keys.Spend, coin.Blind, &coin.Value,
 			coin.OutputId, &addressIndex, coin.SharedSecret, &recipient.Value)
 		recipient.Address = &mw.StealthAddress{
 			Scan: readPubkey(r), Spend: readPubkey(r),
 		}
-		read(r, &fee, &pegin, &pegouts, &lockHeight, &pegout.Value, &scriptLen)
-		pegout.PkScript = make([]byte, scriptLen)
-		read(r, pegout.PkScript)
+		read(r, &fee, &pegin, &nPegouts, &lockHeight)
+		for i := 0; i < int(nPegouts); i++ {
+			var value int64
+			var scriptLen byte
+			read(r, &value, &scriptLen)
+			pkScript := make([]byte, scriptLen)
+			read(r, pkScript)
+			pegouts = append(pegouts, wire.NewTxOut(value, pkScript))
+		}
 		coin.CalculateOutputKey(keys.SpendKey(uint32(addressIndex)))
 		tx, newCoins, _ := mweb.NewTransaction([]*mweb.Coin{coin},
-			[]*mweb.Recipient{recipient}, fee, pegin, []*wire.TxOut{pegout},
+			[]*mweb.Recipient{recipient}, fee, pegin, pegouts,
 			func(b []byte) error { copy(b, keys.Scan[:]); return nil }, nil)
 		var buf bytes.Buffer
 		input := tx.TxBody.Inputs[0]

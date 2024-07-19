@@ -90,11 +90,15 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     if (context.mweb.kernel.pegin) {
       CX_CHECK(hash_varint(context.mweb.kernel.pegin));
     }
-    if (context.mweb.kernel.pegouts) {
-      CX_CHECK(blake3_update(&context.mweb.kernel.pegouts, 1));
-    }
 
     context.mweb.kernel.pegoutsRemaining = context.mweb.kernel.pegouts;
+    if (context.mweb.kernel.pegouts) {
+      CX_CHECK(blake3_update(&context.mweb.kernel.pegouts, 1));
+    } else {
+      context.mwebConfirmOutput = 2;
+      mweb_add_output_user_action(1);
+      return 0;
+    }
 
     return io_send_sw(SW_OK);
 
