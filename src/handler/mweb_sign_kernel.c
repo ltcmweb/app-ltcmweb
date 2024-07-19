@@ -135,6 +135,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     struct {
       blinding_factor_t kernelOffset;
       blinding_factor_t stealthOffset;
+      uint8_t features;
       commitment_t kernelExcess;
       public_key_t stealthExcess;
       signature_t sig;
@@ -150,6 +151,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
 #endif
     CX_CHECK(sk_sub(result.stealthOffset, context.mwebStealthOffset, stealthBlind));
     memcpy(result.kernelOffset, context.mweb.kernel.offset, sizeof(result.kernelOffset));
+    result.features = context.mweb.kernel.features;
 
     CX_CHECK(new_commit(result.kernelExcess, NULL, context.mwebKernelBlind, 0));
     CX_CHECK(sign_mweb_kernel(context.mwebKernelBlind, stealthBlind, result.stealthExcess, result.sig));

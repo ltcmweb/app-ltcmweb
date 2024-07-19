@@ -138,7 +138,7 @@ func main() {
 			output.Message.ViewTag, output.Message.MaskedValue,
 			output.Message.MaskedNonce.FillBytes(make([]byte, 16)),
 			newCoins[0].Blind, newCoins[0].SharedSecret, output.Signature,
-			tx.KernelOffset, tx.StealthOffset, kernel.Excess,
+			tx.KernelOffset, tx.StealthOffset, kernel.Features, kernel.Excess,
 			kernel.StealthExcess, kernel.Signature, output.RangeProofHash)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	case 13:
