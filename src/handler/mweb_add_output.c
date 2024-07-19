@@ -60,6 +60,7 @@ unsigned short handler_mweb_add_output(buffer_t *buffer) {
     return 0;
   }
 
+  context.mwebConfirmOutput = 1;
   return mweb_add_output_user_action(1);
 end:
   return io_send_sw(error);
