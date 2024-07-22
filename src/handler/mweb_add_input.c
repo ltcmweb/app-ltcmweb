@@ -12,6 +12,12 @@
 #include "extensions.h"
 #include "io.h"
 
+bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len) {
+  if (!buffer_can_read(buffer, out_len)) return false;
+  memcpy(out, buffer->ptr + buffer->offset, out_len);
+  return buffer_seek_cur(buffer, out_len);
+}
+
 unsigned short handler_mweb_add_input(buffer_t *buffer) {
   coin_t coin;
   secret_key_t key;

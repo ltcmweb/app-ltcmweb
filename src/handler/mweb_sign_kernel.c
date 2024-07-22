@@ -24,14 +24,6 @@
 #define HEIGHT_LOCK_FEATURE_BIT 0x08
 #define STEALTH_EXCESS_FEATURE_BIT 0x10
 
-bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len) {
-  if (buffer->size - buffer->offset < out_len) {
-    return false;
-  }
-  memcpy(out, buffer->ptr + buffer->offset, out_len);
-  return buffer_seek_cur(buffer, out_len);
-}
-
 unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
   cx_err_t error;
 
