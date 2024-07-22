@@ -32,24 +32,6 @@ bool buffer_read(buffer_t *buffer, uint8_t *out, size_t out_len) {
   return buffer_seek_cur(buffer, out_len);
 }
 
-static cx_err_t hash_varint(uint64_t n) {
-  uint8_t buf[10];
-  int len = 0;
-  cx_err_t error;
-
-  while (true) {
-    buf[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
-    if (n <= 0x7F) break;
-    n = (n >> 7) - 1;
-    len++;
-  }
-  do {
-    CX_CHECK(blake3_update(&buf[len], 1));
-  } while (len--);
-end:
-  return error;
-}
-
 unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
   cx_err_t error;
 
@@ -88,10 +70,10 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     CX_CHECK(blake3_update(context.mweb.kernel.excess, sizeof(commitment_t)));
 
     if (context.mweb.kernel.fee) {
-      CX_CHECK(hash_varint(context.mweb.kernel.fee));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.fee));
     }
     if (context.mweb.kernel.pegin) {
-      CX_CHECK(hash_varint(context.mweb.kernel.pegin));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.pegin));
     }
 
     context.mweb.kernel.pegoutsRemaining = context.mweb.kernel.pegouts;
@@ -121,7 +103,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
 
     context.mweb.kernel.pegoutsRemaining--;
 
-    CX_CHECK(hash_varint(value));
+    CX_CHECK(blake3_update_varint(value));
     CX_CHECK(blake3_update(buffer->ptr + buffer->offset - 1, scriptLen + 1));
 
     get_address_from_output_script(buffer->ptr + buffer->offset - 1, scriptLen + 1,
@@ -145,7 +127,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     } result;
 
     if (context.mweb.kernel.lockHeight) {
-      CX_CHECK(hash_varint(context.mweb.kernel.lockHeight));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.lockHeight));
     }
 
     cx_rng(stealthBlind, sizeof(stealthBlind));
@@ -165,13 +147,13 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
     if (context.mweb.kernel.fee) {
-      CX_CHECK(hash_varint(context.mweb.kernel.fee));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.fee));
     }
     if (context.mweb.kernel.pegin) {
-      CX_CHECK(hash_varint(context.mweb.kernel.pegin));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.pegin));
     }
     if (context.mweb.kernel.lockHeight) {
-      CX_CHECK(hash_varint(context.mweb.kernel.lockHeight));
+      CX_CHECK(blake3_update_varint(context.mweb.kernel.lockHeight));
     }
     CX_CHECK(blake3_update(result.stealthExcess, sizeof(result.stealthExcess)));
     CX_CHECK(blake3_update(result.kernelExcess, sizeof(result.kernelExcess)));

@@ -14,6 +14,25 @@ cx_err_t blake3_update(const void *input, size_t input_len)
     return cx_blake3_update(&hash, input, input_len);
 }
 
+cx_err_t blake3_update_varint(uint64_t n)
+{
+    uint8_t buf[10];
+    int len = 0;
+    cx_err_t error;
+
+    while (true) {
+        buf[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
+        if (n <= 0x7F) break;
+        n = (n >> 7) - 1;
+        len++;
+    }
+    do {
+        CX_CHECK(blake3_update(&buf[len], 1));
+    } while (len--);
+end:
+    return error;
+}
+
 cx_err_t blake3_final(hash_t output, bool check_overflow)
 {
     int diff;
