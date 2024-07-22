@@ -23,14 +23,14 @@
 # To use Trusted Input for segwit, app version must be kept > 2.0.0
 APPVERSION_M = 2
 APPVERSION_N = 1
-APPVERSION_P = 0
+APPVERSION_P = 1
 
 APPDEVELOPPER="Hector Chu"
 APPCOPYRIGHT="(c) 2024 Hector Chu"
 
 APPNAME ="Litecoin MWEB"
 
-VARIANT_VALUES = bitcoin_clone_boilerplate
+VARIANT_VALUES = litecoin_mweb
 
 # Application source files
 # There is no additional sources for bitcoin
@@ -38,13 +38,13 @@ APP_SOURCE_PATH += src/
 
 # simplify for tests
 ifndef COIN
-COIN=bitcoin_clone_boilerplate
+COIN=litecoin_mweb
 endif
 
 # Enabling DEBUG flag will enable PRINTF and disable optimizations
 #DEBUG = 1
 
-ifeq ($(COIN),bitcoin_clone_boilerplate)
+ifeq ($(COIN),litecoin_mweb)
 
 # Refer to : https://github.com/dan-da/coinparams/blob/master/coinprefixes.md
 BIP44_COIN_TYPE=2
