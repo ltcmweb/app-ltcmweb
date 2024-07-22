@@ -67,7 +67,6 @@ end:
 
 unsigned short mweb_add_output_user_action(unsigned char confirming) {
   unsigned char confirmOutput = context.mwebConfirmOutput;
-  hash_t hash;
   cx_err_t error = SW_OK;
 
   context.mwebConfirmOutput = 0;
@@ -78,9 +77,6 @@ unsigned short mweb_add_output_user_action(unsigned char confirming) {
     memset(&context.mweb, 0, sizeof(context.mweb));
     memset(context.mwebKernelBlind, 0, sizeof(context.mwebKernelBlind));
     memset(context.mwebStealthOffset, 0, sizeof(context.mwebStealthOffset));
-
-    CX_CHECK(blake3_update("", 1));
-    CX_CHECK(blake3_final(hash));
     CX_CHECK(SW_CONDITIONS_OF_USE_NOT_SATISFIED);
   }
 

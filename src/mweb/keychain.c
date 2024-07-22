@@ -24,10 +24,11 @@ static cx_err_t mi(const keychain_t *k, uint32_t index, secret_key_t result)
 {
     cx_err_t error;
 
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update("A", 1));
     CX_CHECK(blake3_update(&index, sizeof(uint32_t)));
     CX_CHECK(blake3_update(k->scan, sizeof(secret_key_t)));
-    CX_CHECK(blake3_final(result));
+    CX_CHECK(blake3_final(result, true));
 end:
     return error;
 }

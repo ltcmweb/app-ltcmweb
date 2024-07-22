@@ -72,6 +72,8 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     if (context.mweb.kernel.pegin) context.mweb.kernel.features |= PEGIN_FEATURE_BIT;
     if (context.mweb.kernel.pegouts) context.mweb.kernel.features |= PEGOUT_FEATURE_BIT;
     if (context.mweb.kernel.lockHeight) context.mweb.kernel.features |= HEIGHT_LOCK_FEATURE_BIT;
+
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
 
     cx_rng(context.mweb.kernel.offset, sizeof(blinding_factor_t));
@@ -160,6 +162,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
                               context.mweb.kernel.excessPubkey,
                               result.stealthExcess, result.sig));
 
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(&context.mweb.kernel.features, 1));
     if (context.mweb.kernel.fee) {
       CX_CHECK(hash_varint(context.mweb.kernel.fee));
@@ -173,7 +176,7 @@ unsigned short handler_mweb_sign_kernel(buffer_t *buffer, bool start) {
     CX_CHECK(blake3_update(result.stealthExcess, sizeof(result.stealthExcess)));
     CX_CHECK(blake3_update(result.kernelExcess, sizeof(result.kernelExcess)));
     CX_CHECK(blake3_update(result.sig, sizeof(result.sig)));
-    CX_CHECK(blake3_final(context.mweb.kernel.hash));
+    CX_CHECK(blake3_final(context.mweb.kernel.hash, false));
     context.mwebKernelHashValid = !context.mweb.kernel.pegouts;
 
     return io_send_response_pointer((uint8_t*)&result, sizeof(result), SW_OK);

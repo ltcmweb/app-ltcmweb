@@ -1,6 +1,7 @@
 #include "commit.h"
 #include "const.h"
 #include "sign.h"
+#include "apdu_constants.h"
 
 cx_err_t new_commit(commitment_t commit, public_key_t pub,
     const blinding_factor_t blind, uint64_t value)
@@ -36,6 +37,7 @@ cx_err_t new_blind_switch(blinding_factor_t blind_switch,
     uint8_t point[65];
     public_key_t pub;
     cx_sha256_t hasher;
+    int diff;
     cx_err_t error;
 
     CX_CHECK(new_commit(commit, NULL, blind, value));
@@ -47,6 +49,10 @@ cx_err_t new_blind_switch(blinding_factor_t blind_switch,
     cx_sha256_init_no_throw(&hasher);
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, 0, commit, 33, NULL, 0));
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, CX_LAST, pub, 33, blind_switch, 32));
+
+    CX_CHECK(cx_math_cmp_no_throw(blind_switch, SECP256K1_CURVE_ORDER, 32, &diff));
+    if (diff >= 0) CX_CHECK(SW_OVERFLOWED);
+
     CX_CHECK(sk_add(blind_switch, blind_switch, blind));
 end:
     return error;

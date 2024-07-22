@@ -4,9 +4,9 @@ go 1.21
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1
-	github.com/ltcmweb/ltcd v0.24.4-0.20240716225009-d18c0b5bd21d
+	github.com/ltcmweb/ltcd v0.24.4-0.20240719112335-b44674e8e4a0
 	github.com/ltcmweb/ltcd/chaincfg/chainhash v1.0.3
-	github.com/ltcmweb/ltcd/ltcutil v1.2.4-0.20240716225009-d18c0b5bd21d
+	github.com/ltcmweb/ltcd/ltcutil v1.2.4-0.20240719112335-b44674e8e4a0
 )
 
 require (

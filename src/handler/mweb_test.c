@@ -155,6 +155,7 @@ unsigned short test_sign_mweb_kernel(buffer_t *buffer) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
   CX_CHECK(new_commit(kernel_excess, kernel_excess_pubkey, kernel_blind, 0));
+  CX_CHECK(blake3_init());
   CX_CHECK(blake3_update("\x10", 1));
   CX_CHECK(blake3_update(kernel_excess, sizeof(kernel_excess)));
   CX_CHECK(sign_mweb_kernel(kernel_blind, stealth_blind,

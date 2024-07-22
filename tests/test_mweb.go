@@ -133,13 +133,12 @@ func main() {
 		kernel := tx.TxBody.Kernels[0]
 		write(&buf, input.Features, input.OutputId, input.Commitment,
 			input.InputPubKey, input.OutputPubKey, input.Signature,
-			output.Commitment, output.SenderPubKey, output.ReceiverPubKey,
-			output.Message.Features, output.Message.KeyExchangePubKey,
-			output.Message.ViewTag, output.Message.MaskedValue,
-			output.Message.MaskedNonce.FillBytes(make([]byte, 16)),
-			newCoins[0].Blind, newCoins[0].SharedSecret, output.Signature,
-			tx.KernelOffset, tx.StealthOffset, kernel.Features, kernel.Excess,
-			kernel.StealthExcess, kernel.Signature, output.RangeProofHash)
+			output.Commitment, output.SenderPubKey, output.ReceiverPubKey)
+		output.Message.Serialize(&buf)
+		write(&buf, newCoins[0].Blind, newCoins[0].SharedSecret,
+			output.Signature, tx.KernelOffset, tx.StealthOffset,
+			kernel.Features, kernel.Excess, kernel.StealthExcess,
+			kernel.Signature, output.RangeProofHash)
 		fmt.Println(hex.EncodeToString(buf.Bytes()))
 	case 13:
 		sa := &mw.StealthAddress{Scan: readPubkey(r), Spend: readPubkey(r)}

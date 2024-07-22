@@ -15,11 +15,12 @@ cx_err_t sign_mweb_kernel(
     CX_CHECK(sk_pub(stealth_excess_pubkey, stealth_blind));
 
     CX_CHECK(blake3_update(stealth_excess_pubkey, sizeof(public_key_t)));
-    CX_CHECK(blake3_final(hash));
+    CX_CHECK(blake3_final(hash, false));
 
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(kernel_excess_pubkey, sizeof(public_key_t)));
     CX_CHECK(blake3_update(stealth_excess_pubkey, sizeof(public_key_t)));
-    CX_CHECK(blake3_final(key));
+    CX_CHECK(blake3_final(key, true));
 
     CX_CHECK(sk_mul(key, key, kernel_blind));
     CX_CHECK(sk_add(key, stealth_blind, key));

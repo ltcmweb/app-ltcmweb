@@ -1,5 +1,6 @@
 #include "sign.h"
 #include "const.h"
+#include "apdu_constants.h"
 
 cx_err_t has_square_root(const uint8_t *point, bool *result)
 {
@@ -22,6 +23,7 @@ cx_err_t mweb_sign(signature_t sig, const secret_key_t key, const hash_t msg)
 {
     cx_sha256_t hasher;
     secret_key_t k, e;
+    int diff;
     uint8_t point[65];
     bool has_sqrt;
     public_key_t pubkey;
@@ -30,6 +32,9 @@ cx_err_t mweb_sign(signature_t sig, const secret_key_t key, const hash_t msg)
     cx_sha256_init_no_throw(&hasher);
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, 0, key, 32, NULL, 0));
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, CX_LAST, msg, 32, k, 32));
+
+    CX_CHECK(cx_math_cmp_no_throw(k, SECP256K1_CURVE_ORDER, 32, &diff));
+    if (diff >= 0) CX_CHECK(SW_OVERFLOWED);
 
     memcpy(point, SECP256K1_CURVE_BASE_POINT, sizeof(point));
     CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_SECP256K1, point, k, 32));
@@ -46,6 +51,9 @@ cx_err_t mweb_sign(signature_t sig, const secret_key_t key, const hash_t msg)
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, 0, sig, 32, NULL, 0));
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, 0, pubkey, sizeof(pubkey), NULL, 0));
     CX_CHECK(cx_hash_no_throw((cx_hash_t*)&hasher, CX_LAST, msg, 32, e, 32));
+
+    CX_CHECK(cx_math_cmp_no_throw(e, SECP256K1_CURVE_ORDER, 32, &diff));
+    if (diff >= 0) CX_CHECK(SW_OVERFLOWED);
 
     CX_CHECK(sk_mul(e, e, key));
     CX_CHECK(sk_add(sig + 32, k, e));

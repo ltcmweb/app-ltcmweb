@@ -20,18 +20,20 @@ cx_err_t mweb_input_create(
     CX_CHECK(sk_pub(input->output_pubkey, coin->spend_key));
 
     // Hash keys (K_i||K_o)
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(input->input_pubkey, sizeof(public_key_t)));
     CX_CHECK(blake3_update(input->output_pubkey, sizeof(public_key_t)));
-    CX_CHECK(blake3_final(key_hash));
+    CX_CHECK(blake3_final(key_hash, true));
 
     // Calculate aggregated key k_agg = k_i + HASH(K_i||K_o) * k_o
     CX_CHECK(sk_mul(sig_key, key_hash, coin->spend_key));
     CX_CHECK(sk_add(sig_key, input_key, sig_key));
 
     // Hash message
+    CX_CHECK(blake3_init());
     CX_CHECK(blake3_update(&input->features, 1));
     CX_CHECK(blake3_update(coin->output_id, sizeof(hash_t)));
-    CX_CHECK(blake3_final(msg_hash));
+    CX_CHECK(blake3_final(msg_hash, false));
 
     CX_CHECK(mweb_sign(input->sig, sig_key, msg_hash));
 end:
