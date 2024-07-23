@@ -33,6 +33,17 @@ end:
     return error;
 }
 
+cx_err_t blake3_update_pubkey(const uint8_t *W)
+{
+    uint8_t odd = W[64] % 2 ? 3 : 2;
+    cx_err_t error;
+
+    CX_CHECK(blake3_update(&odd, 1));
+    CX_CHECK(blake3_update(W + 1, 32));
+end:
+    return error;
+}
+
 cx_err_t blake3_final(hash_t output, bool check_overflow)
 {
     int diff;

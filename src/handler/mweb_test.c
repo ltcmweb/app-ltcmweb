@@ -11,6 +11,7 @@
 
 #include "apdu_constants.h"
 #include "context.h"
+#include "display_variables.h"
 #include "extensions.h"
 
 #include "../mweb/kernel.h"
@@ -123,7 +124,6 @@ end:
 
 unsigned short test_keychain_address(buffer_t *buffer) {
   uint32_t index;
-  char address[130];
   cx_err_t error;
 
   if (!buffer_read(buffer, context.mwebKeychain.scan, sizeof(secret_key_t))) {
@@ -135,8 +135,9 @@ unsigned short test_keychain_address(buffer_t *buffer) {
   if (!buffer_read_u32(buffer, &index, LE)) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(keychain_address(&context.mwebKeychain, index, address));
-  return io_send_response_pointer((uint8_t*)address, strlen(address), SW_OK);
+  CX_CHECK(keychain_address(&context.mwebKeychain, index, vars.tmp.fullAddress));
+  return io_send_response_pointer((uint8_t*)vars.tmp.fullAddress,
+                                  strlen(vars.tmp.fullAddress), SW_OK);
 end:
   return io_send_sw(error);
 }

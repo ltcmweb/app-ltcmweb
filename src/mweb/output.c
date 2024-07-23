@@ -8,14 +8,9 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     const uint8_t *pA, const uint8_t *pB,
     const secret_key_t sender_key)
 {
-    public_key_t A, B, sA;
-    hash_t n, h;
-    secret_key_t s;
-    uint8_t pt[65];
+    hash_t h;
+    uint8_t n[16], pt[65];
     cx_err_t error;
-
-    compress_pubkey(A, pA);
-    compress_pubkey(B, pB);
 
     // We only support standard feature fields for now
     output->message.features = MWEB_OUTPUT_MESSAGE_STANDARD_FIELDS_FEATURE_BIT;
@@ -24,25 +19,37 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     CX_CHECK(blake3_init());
     CX_CHECK(blake3_update("N", 1));
     CX_CHECK(blake3_update(sender_key, sizeof(secret_key_t)));
-    CX_CHECK(blake3_final(n, false));
+    CX_CHECK(blake3_final(h, false));
+    memcpy(n, h, sizeof(n));
 
     // Calculate unique sending key 's' = H(T_send, A, B, v, n)
     CX_CHECK(blake3_init());
     CX_CHECK(blake3_update("S", 1));
-    CX_CHECK(blake3_update(A, sizeof(A)));
-    CX_CHECK(blake3_update(B, sizeof(B)));
+    CX_CHECK(blake3_update_pubkey(pA));
+    CX_CHECK(blake3_update_pubkey(pB));
     CX_CHECK(blake3_update(&v, sizeof(v)));
-    CX_CHECK(blake3_update(n, 16));
-    CX_CHECK(blake3_final(s, true));
+    CX_CHECK(blake3_update(n, sizeof(n)));
+    CX_CHECK(blake3_final(h, true));
+
+    // Key exchange public key 'Ke' = s*B
+    memcpy(pt, pB, sizeof(pt));
+    CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, h, 32));
+    compress_pubkey(output->message.key_exchange_pubkey, pt);
 
     // Derive shared secret 't' = H(T_derive, s*A)
     memcpy(pt, pA, sizeof(pt));
-    CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, s, 32));
-    compress_pubkey(sA, pt);
+    CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, h, 32));
     CX_CHECK(blake3_init());
     CX_CHECK(blake3_update("D", 1));
-    CX_CHECK(blake3_update(sA, sizeof(sA)));
+    CX_CHECK(blake3_update_pubkey(pt));
     CX_CHECK(blake3_final(t, false));
+
+    // Derive view tag as first byte of H(T_tag, s*A)
+    CX_CHECK(blake3_init());
+    CX_CHECK(blake3_update("T", 1));
+    CX_CHECK(blake3_update_pubkey(pt));
+    CX_CHECK(blake3_final(h, false));
+    output->message.view_tag = h[0];
 
     // Construct one-time public key for receiver 'Ko' = H(T_outkey, t)*B
     CX_CHECK(blake3_init());
@@ -52,11 +59,6 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     memcpy(pt, pB, sizeof(pt));
     CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, h, 32));
     compress_pubkey(output->receiver_pubkey, pt);
-
-    // Key exchange public key 'Ke' = s*B
-    memcpy(pt, pB, sizeof(pt));
-    CX_CHECK(cx_ecfp_scalar_mult_no_throw(CX_CURVE_256K1, pt, s, 32));
-    compress_pubkey(output->message.key_exchange_pubkey, pt);
 
     // Calc blinding factor and mask nonce and amount
     CX_CHECK(blake3_init());
@@ -68,7 +70,7 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     CX_CHECK(blake3_update("Y", 1));
     CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(h, false));
-    for (int i = 0; i < 8; i++) {
+    for (size_t i = 0; i < sizeof(v); i++) {
         output->message.masked_value[i] = (v >> i*8 & 0xFF) ^ h[i];
     }
 
@@ -76,7 +78,7 @@ cx_err_t mweb_output_create(mweb_output_t *output,
     CX_CHECK(blake3_update("X", 1));
     CX_CHECK(blake3_update(t, sizeof(secret_key_t)));
     CX_CHECK(blake3_final(h, false));
-    for (int i = 0; i < 16; i++) {
+    for (size_t i = 0; i < sizeof(n); i++) {
         output->message.masked_nonce[i] = n[i] ^ h[i];
     }
 
@@ -86,13 +88,6 @@ cx_err_t mweb_output_create(mweb_output_t *output,
 
     // Calculate the ephemeral send pubkey 'Ks' = ks*G
     CX_CHECK(sk_pub(output->sender_pubkey, sender_key));
-
-    // Derive view tag as first byte of H(T_tag, sA)
-    CX_CHECK(blake3_init());
-    CX_CHECK(blake3_update("T", 1));
-    CX_CHECK(blake3_update(sA, sizeof(sA)));
-    CX_CHECK(blake3_final(h, false));
-    output->message.view_tag = h[0];
 end:
     return error;
 }
