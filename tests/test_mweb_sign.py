@@ -1,13 +1,8 @@
 from ecdsa import SigningKey, SECP256k1
 from ragger.navigator.instruction import NavInsID
 from random import randbytes
-from struct import pack
-import subprocess
-
-def run_go(op, data):
-    args = ["./tests/test_mweb", str(op), data.hex()]
-    result = subprocess.run(args, capture_output=True)
-    return bytes.fromhex(result.stdout.decode())
+from struct import pack, unpack
+from misc import run_go
 
 def nav(navigator, text, click=False):
     instructions = [NavInsID.BOTH_CLICK] if click else None
@@ -15,11 +10,10 @@ def nav(navigator, text, click=False):
                                   screen_change_before_first_instruction=False)
 
 def test_mweb_sign(backend, firmware, navigator):
-    for _ in range(10):
-        data = pack('>BIII', 3, 1000 | 1<<31, 2 | 1<<31, 0 | 1<<31)
-        backend.exchange(0xeb, 0x05, 0x00, 0x00, data)
+    for i in range(10):
+        hd_path = pack('>BIII', 3, 1000 | 1<<31, 2 | 1<<31, 0 | 1<<31)
+        backend.exchange(0xeb, 0x05, 0x00, 0x00, hd_path)
         keys = randbytes(64)
-        backend.exchange(0xeb, 0x99, 0x00, 0x00, keys)
 
         coin = randbytes(32) + pack('<Q', int(5e8)) + randbytes(72)
         A = SigningKey.generate(curve=SECP256k1).verifying_key.to_string('uncompressed')
@@ -30,10 +24,12 @@ def test_mweb_sign(backend, firmware, navigator):
         pk_script = bytes.fromhex('0014b72ad041624a5fb52474764d633da79abbcd7665')
         kernel_pegout = pack('<QB', int(1e8), len(pk_script)) + pk_script
 
-        resp_go = run_go(12, keys + coin + recipient + kernel_args + kernel_pegout)
+        data, resp_go = run_go(12, i, keys + coin + recipient + kernel_args + kernel_pegout)
+        keys, coin, recipient = unpack('64s112s138s', data[:314])
         range_proof_hash = resp_go[-32:]
-        recipient_addr = run_go(13, A + B).decode()
+        recipient_addr = run_go(13, i, A + B)[1].decode()
 
+        backend.exchange(0xeb, 0x99, 0x00, 0x00, keys)
         input = backend.exchange(0xeb, 0x07, 0x00, 0x00, coin).data
         with backend.exchange_async(0xeb, 0x08, 0x00, 0x00, recipient):
             nav(navigator, 'LTC 4')
