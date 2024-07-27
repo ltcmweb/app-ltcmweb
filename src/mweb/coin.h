@@ -9,7 +9,7 @@ typedef struct {
     hash_t output_id;
     uint64_t address_index;
     secret_key_t shared_secret;
-    secret_key_t spend_key;
+    secret_key_t output_key;
 } coin_t;
 
-cx_err_t calculate_output_key(coin_t *coin, const secret_key_t spend_key);
+cx_err_t calculate_output_key(coin_t *coin, const secret_key_t child_spend_key);

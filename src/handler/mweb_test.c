@@ -28,17 +28,17 @@ unsigned short test_set_keychain(buffer_t *buffer) {
 
 unsigned short test_calculate_output_key(buffer_t *buffer) {
   coin_t coin;
-  secret_key_t spend_key;
+  secret_key_t child_spend_key;
   cx_err_t error;
 
   if (!buffer_read(buffer, coin.shared_secret, sizeof(coin.shared_secret))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  if (!buffer_read(buffer, spend_key, sizeof(spend_key))) {
+  if (!buffer_read(buffer, child_spend_key, sizeof(child_spend_key))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  CX_CHECK(calculate_output_key(&coin, spend_key));
-  return io_send_response_pointer(coin.spend_key, sizeof(coin.spend_key), SW_OK);
+  CX_CHECK(calculate_output_key(&coin, child_spend_key));
+  return io_send_response_pointer(coin.output_key, sizeof(coin.output_key), SW_OK);
 end:
   return io_send_sw(error);
 }
@@ -58,7 +58,7 @@ unsigned short test_mweb_input_create(buffer_t *buffer) {
   if (!buffer_read(buffer, coin.output_id, sizeof(coin.output_id))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
-  if (!buffer_read(buffer, coin.spend_key, sizeof(coin.spend_key))) {
+  if (!buffer_read(buffer, coin.output_key, sizeof(coin.output_key))) {
     return io_send_sw(SW_INCORRECT_LENGTH);
   }
   if (!buffer_read(buffer, input_key, sizeof(input_key))) {
