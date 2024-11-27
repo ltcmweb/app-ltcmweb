@@ -14,6 +14,7 @@ MWEB instructions
 
 All integers are unsigned little-endian unless indicated.
 Sizes are in bytes.
+`P1` and `P2` are set to zero unless indicated.
 
 Get Public Key
 --------------
@@ -101,3 +102,60 @@ Sign Output
 | Signature | 64
 
 This call calculates the output signature for the given rangeproof hash. This should be called immediately following a "Add Output" as the signature requires the results from that call.
+
+The reason why the signature must be calculated in a second phase is because the rangeproof requires the blinding factor and output message, and the rangeproof can only be calculated in software on the host.
+
+Sign Kernel - Phase 1
+---------------------
+
+`P1` = 1
+
+| Parameter | Size |
+|-----------|------|
+| Fee (in litoshis) | 8
+| Peg-in (in litoshis) | 8
+| Number of peg-outs | 2
+| Lock height | 4
+
+Sets the kernel parameters. There is no response.
+
+If there are no peg-outs, the device will ask the user to confirm the kernel fee.
+
+Due to firmware limitations, it is not possible to sign a transaction containing both a peg-in and peg-outs.
+
+This call should be followed immediately by either Phase 2 or Phase 3.
+
+Sign Kernel - Phase 2 (Add Peg-outs)
+------------------------------------
+
+| Parameter | Size |
+|-----------|------|
+| Value (in litoshis) | 8
+| Length of pubkey script (`len`) | 1
+| Pubkey script | `len`
+
+Adds a peg-out to the kernel. There is no response.
+
+The device will ask for confirmation from the user. The peg-out address and value will be shown.
+
+If there are no peg-outs remaining, the device will ask the user to confirm the kernel fee.
+
+This call should be followed immediately by Phase 3.
+
+Sign Kernel - Phase 3
+---------------------
+
+No parameters.
+
+| Response | Size |
+|----------|------|
+| Kernel offset | 32
+| Stealth offset | 32
+| Kernel feature bit | 1
+| Kernel excess | 33
+| Stealth excess | 33
+| Signature | 64
+
+Finalizes the kernel.
+
+If the kernel contains a peg-in (and no peg-outs), its hash is used when verifying the peg-in output on the corresponding canonical transaction.
