@@ -28,9 +28,9 @@ APPVERSION_P = 1
 APPDEVELOPPER="Hector Chu"
 APPCOPYRIGHT="(c) 2024 Hector Chu"
 
-APPNAME ="Litecoin MWEB"
+APPNAME = "Litecoin"
 
-VARIANT_VALUES = litecoin_mweb
+VARIANT_VALUES = litecoin
 
 # Application source files
 # There is no additional sources for bitcoin
@@ -38,13 +38,17 @@ APP_SOURCE_PATH += src/
 
 # simplify for tests
 ifndef COIN
-COIN=litecoin_mweb
+COIN=litecoin
+endif
+
+ifdef TESTING
+DEFINES += TESTING
 endif
 
 # Enabling DEBUG flag will enable PRINTF and disable optimizations
 #DEBUG = 1
 
-ifeq ($(COIN),litecoin_mweb)
+ifeq ($(COIN),litecoin)
 
 # Refer to : https://github.com/dan-da/coinparams/blob/master/coinprefixes.md
 BIP44_COIN_TYPE=2

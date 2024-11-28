@@ -236,7 +236,7 @@ void blake3_state_update(cx_blake3_state_t *chunk_state, const uint8_t *input, s
         input_len -= BLAKE3_BLOCK_LEN;
     }
 
-    nb_bytes = blake3_fill_buffer(chunk_state, input, input_len);
+    blake3_fill_buffer(chunk_state, input, input_len);
 }
 
 void blake3_state_reset(cx_blake3_state_t *chunk_state, const uint32_t *key, uint64_t chunk_counter)
