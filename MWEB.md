@@ -5,7 +5,7 @@ MWEB instructions
 
 | `INS` | Name           | Summary |
 |-------|----------------|---------|
-| 0x05 | Get Public Key | Retrieve the master scan secret and spend pubkey for a given BIP32 path. Alternatively, show the MWEB address on the device for a given BIP32 path.
+| 0x05 | Get Public Key | Retrieve the master scan secret and spend pubkey for a given BIP32 path. Alternatively, show the MWEB address on the device for a given BIP32 path. Also sets the keychain to use for deriving child spend keys.
 | 0x07 | Add Input      | Given a rewound output, builds and returns the MWEB input spending the output and adds the input to the kernel blind and stealth offset.
 | 0x08 | Add Output     | Given a recipient address and amount, builds and returns an MWEB output and adds the output to the kernel blind and stealth offset.
 | 0x09 | Sign Output    | After building an output, this is used to calculate the output signature given the rangeproof hash which is calculated off-device.
@@ -15,6 +15,14 @@ MWEB instructions
 All integers are unsigned little-endian unless indicated.
 Sizes are in bytes.
 `P1` and `P2` are set to zero unless indicated.
+
+The general workflow is:
+- "Get Public Key" to reset MWEB data and set the keychain.
+- "Add Input" for each MWEB input.
+- "Add Output" / "Sign Output" for each MWEB output.
+- "Sign Kernel - Phase 1" to set the kernel parameters.
+- "Sign Kernel - Phase 2" for each peg-out.
+- "Sign Kernel - Phase 3" to finalize the kernel.
 
 Get Public Key
 --------------
@@ -33,6 +41,8 @@ Get Public Key
 This command resets the running kernel blind and stealth offset and clears all structures used for building MWEB transactions.
 
 If `P1` is non-zero, this command will read the address index and then display the MWEB address corresponding to that index on the device screen for confirmation.
+
+The keychain is set to the supplied BIP32 path and is used for deriving child spend keys during "Add Input".
 
 Add Input
 ---------
@@ -159,3 +169,21 @@ No parameters.
 Finalizes the kernel.
 
 If the kernel contains a peg-in (and no peg-outs), its hash is used when verifying the peg-in output on the corresponding canonical transaction.
+
+Test
+----
+
+| `P1` | Function |
+|------|----------|
+| 0 | Set the keychain scan and spend keys
+| 1 | Derive the coin output key given a shared secret and child spend key
+| 2 | Create a MWEB input given a rewound coin
+| 3 | Create a signature given a key and message hash
+| 4 | Derive the public key given a secret key
+| 5 | Derive the child spend key given a keychain and index
+| 6 | Derive the MWEB address given a keychain and index
+| 7 | Derive the kernel signature given kernel and stealth blinding factors
+| 8 | Derive the Pedersen commitment given a blinding factor and value
+| 9 | Derive the switch commitment blinding factor given a blinding factor and value
+| 10 | Create a MWEB output given an address, value and sender key
+| 11 | Create a signature for the output created in function 10 given a rangeproof hash
