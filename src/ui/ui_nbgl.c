@@ -318,6 +318,12 @@ void ui_display_public_flow(void) {
                             text, NULL, public_flow_callback);
 }
 
+void ui_display_address_flow(void) {
+  snprintf(text, sizeof(text), "Verify %s\naddress", COIN_COINID_NAME);
+  nbgl_useCaseAddressReview(vars.tmp.fullAddress, NULL, &COIN_ICON,
+                            text, NULL, public_flow_callback);
+}
+
 void ui_transaction_finish(void) {
   if (transaction_prompt_done) {
     transaction_prompt_done = false;
