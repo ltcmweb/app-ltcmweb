@@ -1,13 +1,7 @@
 from ecdsa import SigningKey, SECP256k1
-from ragger.navigator.instruction import NavInsID
 from random import randbytes
 from struct import pack, unpack
-from misc import run_go
-
-def nav(navigator, text, click=False):
-    instructions = [NavInsID.BOTH_CLICK] if click else None
-    navigator.navigate_until_text(NavInsID.RIGHT_CLICK, instructions, text,
-                                  screen_change_before_first_instruction=False)
+from misc import *
 
 def test_mweb_sign(backend, firmware, navigator):
     for i in range(10):
@@ -32,18 +26,20 @@ def test_mweb_sign(backend, firmware, navigator):
         backend.exchange(0xeb, 0x99, 0x00, 0x00, keys)
         input = backend.exchange(0xeb, 0x07, 0x00, 0x00, coin).data
         with backend.exchange_async(0xeb, 0x08, 0x00, 0x00, recipient):
-            nav(navigator, 'LTC 4')
-            nav(navigator, recipient_addr[:15])
-            nav(navigator, 'Accept', True)
+            if not firmware.is_nano: navigator.navigate([])
+            nav_to_text(navigator, firmware, 'LTC 4')
+            nav_to_text(navigator, firmware, recipient_addr[:15])
+            nav_accept(navigator, firmware)
         output = backend.last_async_response.data
         output_sig = backend.exchange(0xeb, 0x09, 0x00, 0x00, range_proof_hash).data
         backend.exchange(0xeb, 0x0a, 0x01, 0x00, kernel_args)
         with backend.exchange_async(0xeb, 0x0a, 0x00, 0x00, kernel_pegout):
-            nav(navigator, 'LTC 1')
-            nav(navigator, 'ltc1qku4dqstzff0m2f')
-            nav(navigator, 'Accept', True)
-            nav(navigator, 'LTC 1')
-            nav(navigator, 'Accept', True)
+            nav_to_text(navigator, firmware, 'LTC 1')
+            nav_to_text(navigator, firmware, 'ltc1qku4dqstzff0m2f')
+            nav_accept(navigator, firmware)
+            nav_to_text(navigator, firmware, 'LTC 1')
+            nav_accept(navigator, firmware)
+            if not firmware.is_nano: nav_confirm(navigator)
         kernel = backend.exchange(0xeb, 0x0a, 0x00, 0x00, b'0').data
 
         assert resp_go == input + output + output_sig + kernel + range_proof_hash
