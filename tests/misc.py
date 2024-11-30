@@ -23,6 +23,9 @@ def run_go(op, iter, data):
         json.dump(test_vectors, f, indent=4)
     return data, result
 
+def nav(navigator, ins):
+    navigator.navigate([ins], screen_change_before_first_instruction=False)
+
 def nav_to_text(navigator, firmware, text, instructions=None):
     navigator.navigate_until_text(
         NavInsID.RIGHT_CLICK if firmware.is_nano else NavInsID.SWIPE_CENTER_TO_LEFT,
@@ -32,16 +35,13 @@ def nav_accept(navigator, firmware):
     if firmware.is_nano:
         nav_to_text(navigator, firmware, 'Accept', [NavInsID.BOTH_CLICK])
     else:
-        navigator.navigate([NavInsID.USE_CASE_REVIEW_TAP],
-                           screen_change_before_first_instruction=False)
+        nav(navigator, NavInsID.USE_CASE_REVIEW_TAP)
 
 def nav_approve(navigator, firmware):
     if firmware.is_nano:
         nav_to_text(navigator, firmware, 'Approve', [NavInsID.BOTH_CLICK])
     else:
-        navigator.navigate([NavInsID.USE_CASE_CHOICE_CONFIRM],
-                           screen_change_before_first_instruction=False)
+        nav(navigator, NavInsID.USE_CASE_CHOICE_CONFIRM)
 
 def nav_confirm(navigator):
-    navigator.navigate([NavInsID.USE_CASE_REVIEW_CONFIRM],
-                       screen_change_before_first_instruction=False)
+    nav(navigator, NavInsID.USE_CASE_REVIEW_CONFIRM)
