@@ -23,10 +23,10 @@
 # To use Trusted Input for segwit, app version must be kept > 2.0.0
 APPVERSION_M = 2
 APPVERSION_N = 1
-APPVERSION_P = 1
+APPVERSION_P = 2
 
 APPDEVELOPPER="Hector Chu"
-APPCOPYRIGHT="(c) 2024 Hector Chu"
+APPCOPYRIGHT="(c) 2025 Hector Chu"
 
 APPNAME = "Litecoin"
 
