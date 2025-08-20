@@ -2,6 +2,7 @@
 #include "context.h"
 #include "display_variables.h"
 #include "os_io_seproxyhal.h"
+#include "os_lib.h"
 #include "usbd_core.h"
 #include "ux.h"
 

@@ -275,7 +275,7 @@ static void token_flow_callback(bool confirmed) {
 
 void ui_display_token_flow(void) {
   nbgl_useCaseChoice(&COIN_ICON, "Confirm token",
-                     (char *)G_io_tx_buffer + 200, "Approve", "Reject",
+                     (char *)G_io_apdu_buffer + 200, "Approve", "Reject",
                      token_flow_callback);
 }
 
@@ -300,7 +300,7 @@ static void public_post_warning_flow(bool confirmed) {
     pairList.pairs = pairs;
 
     snprintf(text, sizeof(text), "Verify %s\naddress", COIN_COINID_NAME);
-    nbgl_useCaseAddressReview((char *)G_io_tx_buffer + 200, &pairList,
+    nbgl_useCaseAddressReview((char *)G_io_apdu_buffer + 200, &pairList,
                               &COIN_ICON, text, NULL, public_flow_callback);
   } else {
     public_flow_callback(false);
@@ -315,7 +315,7 @@ void ui_display_public_with_warning_flow(void) {
 
 void ui_display_public_flow(void) {
   snprintf(text, sizeof(text), "Verify %s\naddress", COIN_COINID_NAME);
-  nbgl_useCaseAddressReview((char *)G_io_tx_buffer + 200, NULL, &COIN_ICON,
+  nbgl_useCaseAddressReview((char *)G_io_apdu_buffer + 200, NULL, &COIN_ICON,
                             text, NULL, public_flow_callback);
 }
 
