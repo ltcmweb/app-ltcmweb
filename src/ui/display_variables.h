@@ -1,7 +1,5 @@
 #pragma once
 
-#include "os.h"
-
 // A path contains 10 elements max, which max length in ascii is 1 whitespace +
 // 10 char + optional quote "'" + "/" + \0"
 #define MAX_DERIV_PATH_ASCII_LENGTH 1 + 10 * (10 + 2) + 1

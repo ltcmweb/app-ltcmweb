@@ -18,7 +18,6 @@
 #pragma once
 
 #include "cx.h"
-#include "os.h"
 
 unsigned char output_script_is_regular(const unsigned char *buffer);
 unsigned char output_script_is_p2sh(const unsigned char *buffer);

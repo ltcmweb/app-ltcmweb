@@ -19,7 +19,8 @@
 
 #include "cx.h"
 #include "filesystem_tx.h"
-#include "os.h"
+#include "os_pic.h"
+#include "os_utils.h"
 #ifdef HAVE_NBGL
 #include "nbgl_types.h"
 #endif // HAVE_NBGL

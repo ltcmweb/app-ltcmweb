@@ -19,6 +19,7 @@
 //////////////////////////////////////////////////////////////////////
 #include "context.h"
 #include "display_variables.h"
+#include "os_io.h"
 #include "transaction.h"
 #include "ui.h"
 
@@ -239,7 +240,7 @@ UX_STEP_NOCB(ux_display_public_flow_4_step, pnn,
 UX_STEP_NOCB(ux_display_public_flow_5_step, bnnn_paging,
              {
                  .title = "Address",
-                 .text = (char *)G_io_apdu_buffer + 200,
+                 .text = (char *)G_io_tx_buffer + 200,
              });
 UX_STEP_NOCB(ux_display_address_flow_5_step, bnnn_paging,
              {
@@ -277,7 +278,7 @@ UX_STEP_CB(ux_display_token_flow_1_step, pbb,
            {
                &C_icon_validate_14,
                "Confirm token",
-               (char *)G_io_apdu_buffer + 200,
+               (char *)G_io_tx_buffer + 200,
            });
 UX_STEP_CB(ux_display_token_flow_2_step, pb,
            io_seproxyhal_touch_display_cancel(NULL),

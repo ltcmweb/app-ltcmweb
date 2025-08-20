@@ -18,7 +18,6 @@
 
 #include "buffer.h"
 #include "macros.h"
-#include "os.h"
 
 #define CLA 0xE0
 #define CLA_MWEB 0xEB

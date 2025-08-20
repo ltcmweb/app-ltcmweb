@@ -16,7 +16,6 @@
  ********************************************************************************/
 
 #pragma once
-#include "os.h"
 
 #define MAX_BIP32_PATH 10
 #define MAX_BIP32_PATH_LENGTH (4 * MAX_BIP32_PATH) + 1

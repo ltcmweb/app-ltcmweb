@@ -17,7 +17,7 @@
 #include "bip32.h"
 #include "cx.h"
 #include "format.h"
-#include "os.h"
+#include "os_io.h"
 #include "read.h"
 #include "string.h"
 #include "swap.h"
@@ -63,8 +63,8 @@ static uint8_t check_fee_swap() {
   }
   context.sw = 0x9000;
   context.outLength = 0;
-  G_io_apdu_buffer[context.outLength++] = 0x90;
-  G_io_apdu_buffer[context.outLength++] = 0x00;
+  G_io_tx_buffer[context.outLength++] = 0x90;
+  G_io_tx_buffer[context.outLength++] = 0x00;
 
   return 1;
 }
@@ -271,7 +271,7 @@ uint8_t set_key_path_to_display(const unsigned char *keyPath) {
 
 void display_public_key(uint8_t is_derivation_path_unusual) {
   // append a white space at the end of the address to avoid glitch on nano S
-  strlcat((char *)G_io_apdu_buffer + 200, " ", sizeof(G_io_apdu_buffer) - 200);
+  strlcat((char *)G_io_tx_buffer + 200, " ", sizeof(G_io_tx_buffer) - 200);
 
   if (is_derivation_path_unusual) {
     ui_display_public_with_warning_flow();

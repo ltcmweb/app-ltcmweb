@@ -19,7 +19,6 @@
 
 #include "cx.h"
 #include "filesystem_tx.h"
-#include "os.h"
 #include "stdbool.h"
 
 #define OUTPUT_SCRIPT_REGULAR_PRE_LENGTH 4

@@ -19,7 +19,6 @@
 
 #include "context.h"
 #include "filesystem_tx.h"
-#include "os.h"
 
 enum family_e {
   FAMILY_BITCOIN = 0x01,

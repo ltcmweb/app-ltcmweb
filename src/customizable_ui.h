@@ -16,7 +16,7 @@
  ********************************************************************************/
 #pragma once
 #include "macros.h"
-#include "os.h"
+#include <stdint.h>
 
 void get_address_from_output_script(const unsigned char *script, int script_size,
                                     char *out, int out_size);

@@ -21,7 +21,6 @@
  */
 
 #include "cx.h"
-#include "os.h"
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdlib.h>
