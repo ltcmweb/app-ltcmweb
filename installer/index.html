@@ -141,7 +141,7 @@
 					const walletType = hardwareWallet["device"]["productName"];
 					
 					// Get wallet's name
-					walletName = hardwareWallet["device"]["manufacturerName"] + " " + hardwareWallet["device"]["productName"];
+					walletName = hardwareWallet["device"]["productName"];
 					
 					// Check if wallet is a Ledger Nano X
 					if(walletType === "Nano X") {
@@ -427,11 +427,11 @@
 				for(let i = 0; i < packets["length"]; ++i) {
 				
 					// Send packet
-					await this.device.transferOut(3, packets[i]);
+					await this.device.sendReport(0, packets[i]);
 				}
 				
 				// Receive first response packet
-				const firstResponsePacket = new Uint8Array((await this.device.transferIn(3, UsbTransport.PACKET_SIZE))["data"]["buffer"]);
+				const firstResponsePacket = await new Promise(resolve => this.device.oninputreport = ({data}) => resolve(new Uint8Array(data.buffer)));
 				
 				// Get response size
 				const responseSize = (firstResponsePacket[UsbTransport.PACKET_HEADER_SIZE] << UsbTransport.BITS_IN_A_BYTE) | firstResponsePacket[UsbTransport.PACKET_HEADER_SIZE + 1];
@@ -443,7 +443,7 @@
 				while(response["length"] < responseSize) {
 				
 					// Receive packet
-					const packet = new Uint8Array((await this.device.transferIn(3, UsbTransport.PACKET_SIZE))["data"]["buffer"]);
+					const packet = await new Promise(resolve => this.device.oninputreport = ({data}) => resolve(new Uint8Array(data.buffer)));
 					
 					// Append packet's response to response
 					const currentResponse = new Uint8Array(response["length"] + packet["length"] - UsbTransport.PACKET_HEADER_SIZE);
@@ -470,7 +470,7 @@
 			static async request() {
 			
 				// Get device
-				const device = await navigator["usb"].requestDevice({
+				const device = (await navigator["hid"].requestDevice({
 								
 					// Filters
 					"filters": [
@@ -480,28 +480,10 @@
 							"vendorId": UsbTransport.VENDOR_ID,
 						}
 					]
-				});
+				}))[0];
 				
 				// Open device
 				await device.open();
-				
-				// Select device's configuration
-				await device.selectConfiguration(1);
-				
-				// Try
-				try {
-				
-					// Reset device
-					await device.reset();
-				}
-				
-				// Catch errors
-				catch(error) {
-				
-				}
-				
-				// Claim interface
-				await device.claimInterface(1);
 				
 				// Return USB transport for the device
 				return new UsbTransport(device);
