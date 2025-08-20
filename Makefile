@@ -22,8 +22,8 @@
 # Application version
 # To use Trusted Input for segwit, app version must be kept > 2.0.0
 APPVERSION_M = 2
-APPVERSION_N = 1
-APPVERSION_P = 2
+APPVERSION_N = 2
+APPVERSION_P = 0
 
 APPDEVELOPPER="Hector Chu"
 APPCOPYRIGHT="(c) 2025 Hector Chu"
