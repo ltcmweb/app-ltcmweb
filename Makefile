@@ -84,4 +84,4 @@ else ifeq ($(filter clean,$(MAKECMDGOALS)),)
 $(error Unsupported COIN - use $(VARIANT_VALUES))
 endif
 
-include Makefile.lib-app-bitcoin
+include lib-app-bitcoin/Makefile
