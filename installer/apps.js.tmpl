@@ -1,0 +1,91 @@
+// Use strict
+"use strict";
+
+// Constants
+
+// Firmware versions
+const FIRMWARE_VERSIONS = {
+
+	// Ledger Nano S
+	"Nano S": "2.1.0",
+
+	// Ledger Nano X
+	"Nano X": "2.5.0",
+
+	// Ledger Nano S Plus
+	"Nano S+": "1.4.0",
+
+	// Ledger Stax
+	"Stax": "1.8.0",
+
+	// Ledger Flex
+	"Flex": "1.4.0"
+};
+
+// Target IDs
+const TARGET_IDS = {
+
+	// Ledger Nano S
+	"Nano S": "31100004",
+
+	// Ledger Nano X
+	"Nano X": "33000004",
+
+	// Ledger Nano S Plus
+	"Nano S+": "33100004",
+
+	// Ledger Stax
+	"Stax": "33200004",
+
+	// Ledger flex
+	"Flex": "33300004"
+};
+
+// Apps
+const APPS = {
+
+	// App name
+	"Litecoin": {
+
+		// App version
+		"Version": "2.2.0",
+
+		// Hash
+		"Hash": {
+
+			// Ledger Nano S (Contents of bin/app.sha256)
+			"Nano S": "{{ file.Read "../build/nanos/bin/app.sha256" | strings.TrimSpace }}",
+
+			// Ledger Nano X (Contents of bin/app.sha256)
+			"Nano X": "{{ file.Read "../build/nanox/bin/app.sha256" | strings.TrimSpace }}",
+
+			// Ledger Nano S Plus (Contents of bin/app.sha256)
+			"Nano S+": "{{ file.Read "../build/nanos2/bin/app.sha256" | strings.TrimSpace }}",
+
+			// Ledger Stax (Contents of bin/app.sha256)
+			"Stax": "{{ file.Read "../build/stax/bin/app.sha256" | strings.TrimSpace }}",
+
+			// Ledger Flex (Contents of bin/app.sha256)
+			"Flex": "{{ file.Read "../build/flex/bin/app.sha256" | strings.TrimSpace }}"
+		},
+
+		// APDU commands
+		"APDU Commands": {
+
+			// Ledger Nano S (Contents of bin/app.apdu)
+			"Nano S": `{{ file.Read "../build/nanos/bin/app.apdu" | strings.TrimSpace }}`,
+
+			// Ledger Nano X (Contents of bin/app.apdu)
+			"Nano X": `{{ file.Read "../build/nanox/bin/app.apdu" | strings.TrimSpace }}`,
+
+			// Ledger Nano S Plus (Contents of bin/app.apdu)
+			"Nano S+": `{{ file.Read "../build/nanos2/bin/app.apdu" | strings.TrimSpace }}`,
+
+			// Ledger Stax (Contents of bin/app.apdu)
+			"Stax": `{{ file.Read "../build/stax/bin/app.apdu" | strings.TrimSpace }}`,
+
+			// Ledger Flex (Contents of bin/app.apdu)
+			"Flex": `{{ file.Read "../build/flex/bin/app.apdu" | strings.TrimSpace }}`
+		}
+	}
+};
