@@ -17,7 +17,6 @@
 #include "bip32.h"
 #include "cx.h"
 #include "format.h"
-#include "os_io.h"
 #include "read.h"
 #include "string.h"
 #include "swap.h"

@@ -24,16 +24,12 @@ def run_go(op, iter, data):
     return data, result
 
 def nav(navigator, ins):
-    navigator.navigate([ins],
-        screen_change_before_first_instruction=False,
-        screen_change_after_last_instruction=False)
+    navigator.navigate([ins], screen_change_before_first_instruction=False)
 
 def nav_to_text(navigator, firmware, text, instructions=None):
     navigator.navigate_until_text(
         NavInsID.RIGHT_CLICK if firmware.is_nano else NavInsID.SWIPE_CENTER_TO_LEFT,
-        instructions, text,
-        screen_change_before_first_instruction=False,
-        screen_change_after_last_instruction=False)
+        instructions, text, screen_change_before_first_instruction=False)
 
 def nav_accept(navigator, firmware):
     if firmware.is_nano:

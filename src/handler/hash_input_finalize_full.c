@@ -622,5 +622,5 @@ unsigned char user_action(unsigned char confirming) {
     // we've finished the processing of the input
     hash_input_finalize_full_reset();
   }
-  return io_send_response_pointer(G_io_apdu_buffer, context.outLength, sw);
+  return io_send_response_pointer(G_io_apdu_buffer, context.outLength, sw) < 0;
 }

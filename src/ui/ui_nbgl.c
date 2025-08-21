@@ -19,7 +19,6 @@
 #include "context.h"
 #include "display_variables.h"
 #include "nbgl_use_case.h"
-#include "os_io.h"
 #include "ui.h"
 
 #include "extensions.h"
