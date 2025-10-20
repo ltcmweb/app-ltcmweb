@@ -483,7 +483,7 @@
 				}))[0];
 				
 				// Open device
-				await device.open();
+				if (!device.opened) await device.open();
 				
 				// Return USB transport for the device
 				return new UsbTransport(device);
